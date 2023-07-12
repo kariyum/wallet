@@ -61,10 +61,87 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  late TextEditingController myController;
+  bool isDialogOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    myController = TextEditingController();
+    myController.text = '';
+  }
+
+  @override
+  void dispose() {
+    myController.dispose();
+    super.dispose();
+  }
+
+  bool isExpanded = false;
+
+  void toggleExpansion() {
+    setState(() {
+      isExpanded = !isExpanded;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    List<ListTile> tiles = items.length != 0
+        ? items
+            .map((e) => {
+                  ListTile(
+                    title: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${e.item}',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 18,
+                          ),
+                        ),
+                        Text('${e.price}',
+                            style: TextStyle(
+                              fontSize: 18,
+                            ))
+                      ],
+                    ),
+                  )
+                })
+            .toList()[0]
+            .toList()
+        : <ListTile>[
+            ListTile(
+              title: Text("List is empty"),
+            )
+          ].toList();
+    List<Widget> l = ["Groceries", "Car gas", "Others", "Fun"]
+        .map(
+          (e) => ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+            ),
+            onPressed: () async {
+              final price = await openDialog();
+              debugPrint("the price was $price");
+              items.add(Item(e, price));
+              isDialogOpen = false;
+              setState(() {
+                debugPrint("EXPANDING");
+              });
+            },
+            child: Row(
+              children: [
+                Text(e),
+              ],
+            ),
+          ),
+        )
+        .toList();
     return Scaffold(
       appBar: AppBar(
         // TRY THIS: Try changing the color here to a specific color (to
@@ -77,40 +154,166 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Text("Wallet"),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Container(
-            alignment: Alignment.topLeft,
-            margin: const EdgeInsets.all(8.0),
-            child: const Text(
-              "Total expenses",
-              style: TextStyle(fontSize: 24),
-            ),
-          ),
-          Center(
-            child: Text(
-              "100 DT",
-              style: TextStyle(fontSize: 24),
-            ),
-          ),
-          Row(
-            children: <Widget>[
+          Column(
+            children: [
               Container(
+                alignment: Alignment.topLeft,
                 margin: const EdgeInsets.all(8.0),
-                child: Text(
-                  "Details",
-                  style: TextStyle(fontSize: 18),
+                child: const Text(
+                  "Total expenses",
+                  style: TextStyle(fontSize: 24),
                 ),
-              )
+              ),
+              Center(
+                child: Text(
+                  "100 DT",
+                  style: TextStyle(fontSize: 24),
+                ),
+              ),
+              Row(
+                children: <Widget>[
+                  Container(
+                    margin: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "Details",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ],
+              ),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: items.length,
+                  itemBuilder: (BuildContext context, int idx) {
+                    return ListTile(
+                      title: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${items[idx].item}',
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                          Text('${items[idx].price}',
+                              style: TextStyle(
+                                fontSize: 18,
+                              ))
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
           ),
-          ExpensesList(),
-          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                margin: EdgeInsets.all(10),
+                child: TapRegion(
+                  onTapOutside: (tap) {
+                    setState(() {
+                      debugPrint('isExpanded: $isExpanded');
+                      debugPrint('isDialogOpen: $isDialogOpen');
+                      isExpanded = isExpanded && isDialogOpen;
+                      debugPrint("TAPPED OUTSIDE");
+                    });
+                  },
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (isExpanded)
+                        SizedBox(
+                          width: 200,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: l,
+                          ),
+                        ),
+              
+                      // Flexible(
+                      //   child: SizedBox(
+                      //     width: 200,
+                      //     child: ListView.builder(
+                      //         shrinkWrap: true,
+                      //         itemCount: 4,
+                      //         itemBuilder: (BuildContext context, int idx) {
+                      //           return Container(
+                      //             color: Colors.white,
+                      //             // child: ListTile(
+                      //             //   title: Text('item $idx'),
+                      //             //   onLongPress: (){},
+                      //             //   onTap: (){
+                      //             //     debugPrint('item $idx');
+                      //             //   },
+                      //             // ),
+                      //             child: ElevatedButton(
+                      //               style: ElevatedButton.styleFrom(
+                      //                   shape: const RoundedRectangleBorder(
+                      //                 borderRadius: BorderRadius.all(Radius.zero),
+                      //               )),
+                      //               child: Text("yoo"),
+                      //               onPressed: () {},
+                      //             ),
+                      //           );
+                      //         }),
+                      //   ),
+                      // ),
+                      FloatingActionButton(
+                        onPressed: toggleExpansion,
+                        child: Icon(Icons.add),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
-      
-      floatingActionButton:
-          FloatingButtonExpansion(), // This trailing comma makes auto-formatting nicer for build methods.
+
+      // floatingActionButton:
+      //     FloatingButtonExpansion(), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  Future<String?> openDialog() {
+    isDialogOpen = true;
+    myController.text = '';
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: TextFormField(
+          controller: myController,
+          decoration: InputDecoration(
+            hintText: 'Price',
+          ),
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (value) {
+            Navigator.of(context).pop(myController.text);
+            isExpanded = false;
+          },
+        ),
+        // actions: [
+        //   TextButton(
+        //     onPressed: () {
+        //       debugPrint("ok");
+        //       Navigator.of(context).pop(myController.text);
+        //     },
+        //     child: Text('OK'),
+        //   ),
+        // ],
+      ),
     );
   }
 }
@@ -278,33 +481,37 @@ class ExpensesList extends StatefulWidget {
 }
 
 class ExpensesListState extends State<ExpensesList> {
-  var tiles = items.map((e) => {
-        ListTile(
-          title: Text(
-            '${e.item} ${e.price}',
-            style: TextStyle(
-              fontSize: 18,
-            ),
-          ),
-        )
-      }).toList();
+  var tiles = items
+      .map((e) => {
+            ListTile(
+              title: Text(
+                '${e.item} ${e.price}',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+              ),
+            )
+          })
+      .toList();
   @override
   Widget build(BuildContext context) {
-    return items.length != 0 ? Flexible(
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: items.length,
-        itemBuilder: (BuildContext context, int idx) {
-          return ListTile(
-          title: Text(
-            '${items[idx].item} ${items[idx].price}',
-            style: TextStyle(
-              fontSize: 18,
+    return items.length != 0
+        ? Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: items.length,
+              itemBuilder: (BuildContext context, int idx) {
+                return ListTile(
+                  title: Text(
+                    '${items[idx].item} ${items[idx].price}',
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
-        );
-        },
-      ),
-    ) : Text("Emty list");
+          )
+        : Text("Emty list");
   }
 }
