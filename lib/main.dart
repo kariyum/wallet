@@ -18,21 +18,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Wallet',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme:
             ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 29, 123, 177)),
         useMaterial3: true,
@@ -44,15 +29,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -87,36 +63,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    List<ListTile> tiles = items.length != 0
-        ? items
-            .map((e) => {
-                  ListTile(
-                    title: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${e.item}',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text('${e.price}',
-                            style: TextStyle(
-                              fontSize: 18,
-                            ))
-                      ],
-                    ),
-                  )
-                })
-            .toList()[0]
-            .toList()
-        : <ListTile>[
-            ListTile(
-              title: Text("List is empty"),
-            )
-          ].toList();
     List<Widget> l = ["Groceries", "Car gas", "Others", "Fun"]
         .map(
           (e) => ElevatedButton(
@@ -142,14 +88,12 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         )
         .toList();
+
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
+        backgroundColor: Theme.of(context).colorScheme.surface ,//Theme.of(context).colorScheme.primaryContainer,
+        primary: true,
+        
         title: const Center(
           child: Text("Wallet"),
         ),
@@ -163,13 +107,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 margin: const EdgeInsets.all(8.0),
                 child: const Text(
                   "Total expenses",
-                  style: TextStyle(fontSize: 24),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               Center(
-                child: Text(
-                  "100 DT",
-                  style: TextStyle(fontSize: 24),
+                child: SizedBox(
+                  height: 150,
+                  child: Center(
+                    child: Text(
+                      "100 DT",
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               Row(
@@ -177,8 +132,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   Container(
                     margin: const EdgeInsets.all(8.0),
                     child: Text(
-                      "Details",
-                      style: TextStyle(fontSize: 18),
+                      "Transactions",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -189,6 +147,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   itemCount: items.length,
                   itemBuilder: (BuildContext context, int idx) {
                     return ListTile(
+                      leading: Text("⨀"),
                       title: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -202,7 +161,13 @@ class _MyHomePageState extends State<MyHomePage> {
                           Text('${items[idx].price}',
                               style: TextStyle(
                                 fontSize: 18,
-                              ))
+                              )),
+                          Text(
+                            '04/05',
+                            style: TextStyle(
+                              fontSize: 12,
+                            ),
+                          )
                         ],
                       ),
                     );
@@ -215,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Container(
-                margin: EdgeInsets.all(10),
+                margin: const EdgeInsets.all(20),
                 child: TapRegion(
                   onTapOutside: (tap) {
                     setState(() {
@@ -238,35 +203,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             children: l,
                           ),
                         ),
-              
-                      // Flexible(
-                      //   child: SizedBox(
-                      //     width: 200,
-                      //     child: ListView.builder(
-                      //         shrinkWrap: true,
-                      //         itemCount: 4,
-                      //         itemBuilder: (BuildContext context, int idx) {
-                      //           return Container(
-                      //             color: Colors.white,
-                      //             // child: ListTile(
-                      //             //   title: Text('item $idx'),
-                      //             //   onLongPress: (){},
-                      //             //   onTap: (){
-                      //             //     debugPrint('item $idx');
-                      //             //   },
-                      //             // ),
-                      //             child: ElevatedButton(
-                      //               style: ElevatedButton.styleFrom(
-                      //                   shape: const RoundedRectangleBorder(
-                      //                 borderRadius: BorderRadius.all(Radius.zero),
-                      //               )),
-                      //               child: Text("yoo"),
-                      //               onPressed: () {},
-                      //             ),
-                      //           );
-                      //         }),
-                      //   ),
-                      // ),
                       FloatingActionButton(
                         onPressed: toggleExpansion,
                         child: Icon(Icons.add),
