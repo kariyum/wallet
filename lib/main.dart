@@ -93,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface ,//Theme.of(context).colorScheme.primaryContainer,
         primary: true,
-        
+        scrolledUnderElevation: 0.0,
         title: const Center(
           child: Text("Wallet"),
         ),
@@ -143,32 +143,36 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Flexible(
                 child: ListView.builder(
+                  // separatorBuilder: (BuildContext context, int index) => const Divider(),
+                  padding: const EdgeInsets.all(8.0),
                   shrinkWrap: true,
                   itemCount: items.length,
                   itemBuilder: (BuildContext context, int idx) {
-                    return ListTile(
-                      leading: Text("⨀"),
-                      title: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${items[idx].item}',
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                          ),
-                          Text('${items[idx].price}',
+                    return Card(
+                      child: ListTile(
+                        leading: Text("⨀"),
+                        title: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${items[idx].item}',
                               style: TextStyle(
                                 fontSize: 18,
-                              )),
-                          Text(
-                            '04/05',
-                            style: TextStyle(
-                              fontSize: 12,
+                              ),
                             ),
-                          )
-                        ],
+                            Text('${items[idx].price}',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                )),
+                            Text(
+                              '04/05',
+                              style: TextStyle(
+                                fontSize: 12,
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     );
                   },
