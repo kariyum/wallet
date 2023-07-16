@@ -43,6 +43,10 @@ class Item {
   Future<void> persist() async {
     await DatabaseRepository.instance.insert(item: this);
   }
+
+  bool isCredit() {
+    return price < 0;
+  }
 }
 
 class DatabaseRepository {
@@ -100,7 +104,7 @@ class MyApp extends StatelessWidget {
       title: 'Wallet',
       theme: ThemeData(
         colorScheme:
-            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 29, 123, 177)),
+            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 8, 116, 178)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
@@ -119,6 +123,10 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController myController;
+
+  late TextEditingController titleController;
+  late TextEditingController priceController;
+
   bool isDialogOpen = false;
 
   @override
@@ -126,8 +134,14 @@ class _MyHomePageState extends State<MyHomePage> {
     initDb();
     super.initState();
     updateItems();
+
+    titleController = TextEditingController();
+    titleController.text = '';
+
+    priceController = TextEditingController();
+    priceController.text = '';
+
     myController = TextEditingController();
-    myController.text = '';
   }
 
   Future<void> deleteDatabase(String path) =>
@@ -142,6 +156,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
+    titleController.dispose();
+    priceController.dispose();
+
     myController.dispose();
     super.dispose();
   }
@@ -171,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final res = items.isEmpty
         ? 0.0
         : items.map((e) => e.price).reduce((value, element) => value + element);
-    return res;
+    return double.parse(((res * 100).roundToDouble() / 100).toStringAsFixed(2));
   }
 
   final ScrollController _scrollController = ScrollController();
@@ -180,41 +197,6 @@ class _MyHomePageState extends State<MyHomePage> {
     debugPrint("rebuilding");
     WidgetsBinding.instance.addPostFrameCallback((_) =>
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent));
-
-    List<Widget> l = ["Groceries", "Car gas", "Others", "Fun"]
-        .map(
-          (e) => ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-            onPressed: () async {
-              final price = await openDialog();
-              final cost = price == null ? "0" : price.toString();
-              debugPrint("the price was $cost");
-              // items.add(Item(e, price));
-              Item(
-                      price: double.parse(cost),
-                      title: e,
-                      timestamp: DateTime.now().millisecondsSinceEpoch)
-                  .persist();
-              updateItems();
-              final toPrint = await DatabaseRepository.instance.getAllItems();
-              debugPrint(toPrint.length.toString());
-              isDialogOpen = false;
-              setState(() {
-                debugPrint("EXPANDING");
-              });
-            },
-            child: Row(
-              children: [
-                Text(e),
-              ],
-            ),
-          ),
-        )
-        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -250,7 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Text(
                       // '${totalExpenses().toString()} DT',
                       totalExpenses().toString(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                       ),
@@ -263,7 +245,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: <Widget>[
                   Container(
                     margin: const EdgeInsets.all(16.0),
-                    child: Text(
+                    child: const Text(
                       "Transactions",
                       style: TextStyle(
                         fontSize: 18,
@@ -274,8 +256,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   Container(
                     margin: const EdgeInsets.all(16.0),
                     child: IconButton(
-                      onPressed: () {},
-                      icon: Icon(Icons.add),
+                      onPressed: () async {
+                        final x = await openDialog2();
+                        if (x == null) {
+                          debugPrint(x.toString());
+                        } else {
+                          setState(() {
+                            x.persist();
+                            updateItems();
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.add),
                     ),
                   )
                 ],
@@ -292,27 +284,29 @@ class _MyHomePageState extends State<MyHomePage> {
                   itemCount: items.length,
                   itemBuilder: (BuildContext context, int idx) {
                     return ListTile(
-                      leading: Text("⨀"),
+                      leading: Icon(
+                        items[idx].isCredit()
+                            ? Icons.shopping_bag
+                            : Icons.paid,
+                        color: Colors.blue[300],
+                      ),
                       title: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             items[idx].title,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 18,
                             ),
                           ),
                           Text(
-                            items[idx].price.toString(),
+                            '${items[idx].price.toString()} DT',
                             style: TextStyle(
                               fontSize: 18,
-                            ),
-                          ),
-                          Text(
-                            '04/05',
-                            style: TextStyle(
-                              fontSize: 12,
+                              color: items[idx].isCredit()
+                                  ? const Color.fromARGB(255, 219, 68, 55)
+                                  : const Color.fromARGB(255, 15, 157, 88),
                             ),
                           )
                         ],
@@ -376,7 +370,7 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context) => AlertDialog(
         content: TextFormField(
           controller: myController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Price',
           ),
           keyboardType: TextInputType.number,
@@ -398,6 +392,135 @@ class _MyHomePageState extends State<MyHomePage> {
         // ],
       ),
     );
+  }
+
+  void _credit() {
+    final thisItem = Item(
+      price: 0 - double.parse(priceController.text),
+      title: titleController.text,
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+    );
+    Navigator.of(context).pop(thisItem);
+  }
+
+  Future<Item?> openDialog2() {
+    titleController.text = '';
+    priceController.text = '';
+    return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Padding(
+                padding: EdgeInsets.only(left: 8.0, right:8.0),
+                child: Text("New transaction"),
+              ),
+              insetPadding: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.all(24.0),
+              content: Container(
+                width: 300,
+                child: Padding(
+                  padding: const EdgeInsets.all(0.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, right:8.0),
+                        child: TextFormField(
+                          textCapitalization: TextCapitalization.sentences,
+                          controller: titleController,
+                          decoration: const InputDecoration(
+                            alignLabelWithHint: true,
+                            labelText: 'Item',
+                            labelStyle: TextStyle(
+                              fontSize: 18,
+                            ),
+                            // border: OutlineInputBorder(),
+                          ),
+                          textInputAction: TextInputAction.next,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, right:8.0),
+                        child: TextFormField(
+                          controller: priceController,
+                          decoration: const InputDecoration(
+                              alignLabelWithHint: true,
+                              labelText: 'Price',
+                              labelStyle: TextStyle(
+                                fontSize: 18,
+                              )
+                              // border: OutlineInputBorder(),
+                              ),
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (value) {
+                            _credit();
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      style: const ButtonStyle(
+                        padding: MaterialStatePropertyAll(
+                            EdgeInsets.only(left: 0.0)),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop(null);
+                      },
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            final thisItem = Item(
+                              price: double.parse(priceController.text),
+                              title: titleController.text,
+                              timestamp: DateTime.now().millisecondsSinceEpoch,
+                            );
+                            Navigator.of(context).pop(thisItem);
+                          },
+                          child: const Text(
+                            "Debit",
+                            style: TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          style: const ButtonStyle(
+                            padding: MaterialStatePropertyAll(
+                              EdgeInsets.only(right: 0.0),
+                            ),
+                          ),
+                          onPressed: _credit,
+                          child: const Text(
+                            "Credit",
+                            style: TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+              ],
+            ));
   }
 }
 
