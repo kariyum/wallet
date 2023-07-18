@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/services.dart';
 
@@ -74,6 +74,39 @@ class Item {
 
   bool isCredit() {
     return price < 0;
+  }
+
+  String note() {
+    List<String> months = <String>[
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    String s = '';
+    switch (month) {
+      case 1:
+        s = 'st';
+        break;
+      case 2:
+        s = 'nd';
+        break;
+      case 3:
+        s = 'rd';
+        break;
+      default:
+        s = 'th';
+    }
+    
+    return '${months[month! - 1]} ${day.toString()}$s';
   }
 }
 
@@ -315,32 +348,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ));
-
-      // for (final value in entry.value) {
-      //   res.add(ListTile(
-      //     title: Row(
-      //       crossAxisAlignment: CrossAxisAlignment.end,
-      //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //       children: [
-      //         Text(
-      //           value.title,
-      //           style: const TextStyle(
-      //             fontSize: 18,
-      //           ),
-      //         ),
-      //         Text(
-      //           '${value.price.toString()} DT',
-      //           style: TextStyle(
-      //             fontSize: 18,
-      //             color: value.isCredit()
-      //                 ? const Color.fromARGB(255, 219, 68, 55)
-      //                 : const Color.fromARGB(255, 15, 157, 88),
-      //           ),
-      //         )
-      //       ],
-      //     ),
-      //   ));
-      // }
     }
     flattened = res;
   }
@@ -434,73 +441,22 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
                 Flexible(
-                    child: ListView.separated(
-                  controller: _scrollController,
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const Divider(),
-                  // reverse: true,
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  itemCount: flattened.length,
-                  itemBuilder: (context, i) {
-                    return flattened[i];
-                  },
-                )),
-                // for (final entry in itemsByDate.entries)
-                //   Flexible(
-                //     child: Column(
-                //       children: [
-                //         Text('${entry.key}'),
-                //         Flexible(
-                //           child: ListView.separated(
-                //             controller: _scrollController,
-                //             separatorBuilder:
-                //                 (BuildContext context, int index) =>
-                //                     const Divider(),
-                //             padding: const EdgeInsets.all(8.0),
-                //             reverse: true,
-                //             scrollDirection: Axis.vertical,
-                //             shrinkWrap: true,
-                //             itemCount: entry.value.length,
-                //             itemBuilder: (context, i) {
-                //               return ListTile(
-                //                 leading: Icon(
-                //                   entry.value[i].isCredit()
-                //                       ? Icons.shopping_bag
-                //                       : Icons.paid,
-                //                   color: Colors.blue[300],
-                //                 ),
-                //                 title: Row(
-                //                   crossAxisAlignment: CrossAxisAlignment.end,
-                //                   mainAxisAlignment:
-                //                       MainAxisAlignment.spaceBetween,
-                //                   children: [
-                //                     Text(
-                //                       entry.value[i].title,
-                //                       style: const TextStyle(
-                //                         fontSize: 18,
-                //                       ),
-                //                     ),
-                //                     Text(
-                //                       '${entry.value[i].price.toString()} DT',
-                //                       style: TextStyle(
-                //                         fontSize: 18,
-                //                         color: entry.value[i].isCredit()
-                //                             ? const Color.fromARGB(
-                //                                 255, 219, 68, 55)
-                //                             : const Color.fromARGB(
-                //                                 255, 15, 157, 88),
-                //                       ),
-                //                     )
-                //                   ],
-                //                 ),
-                //               );
-                //             },
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ),
+                  child: ListView.separated(
+                    controller: _scrollController,
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Divider(),
+                    reverse: true,
+                    scrollDirection: Axis.vertical,
+                    shrinkWrap: true,
+                    // padding: EdgeInsets.all(16.0),
+                    // itemCount: flattened.length,
+                    // itemBuilder: (context, i) {
+                    //   return flattened[i];
+                    // },
+                    itemCount: items.length,
+                    itemBuilder: itemBuilderSimple,
+                  ),
+                ),
               ],
             ),
     );
@@ -559,27 +515,47 @@ class _MyHomePageState extends State<MyHomePage> {
     return ListTile(
       leading: Icon(
         items[idx].isCredit() ? Icons.shopping_bag : Icons.paid,
-        color: Colors.blue[300],
+        color: Color.fromARGB(255, 66 ,133, 244),
+      ),
+      subtitle: Text(
+        items[idx].note(),
+        style: TextStyle(
+          fontSize: 14,
+          color: Colors.grey[600],
+        )
+      ),
+      trailing: Text(
+        '${items[idx].price.toString()} DT',
+        style: TextStyle(
+          fontSize: 18,
+          color: items[idx].isCredit()
+              ? Color.fromARGB(255, 219, 68, 55)
+              : const Color.fromARGB(255, 15, 157, 88),
+        ),
       ),
       title: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             items[idx].title,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 21,
             ),
           ),
-          Text(
-            '${items[idx].price.toString()} DT',
-            style: TextStyle(
-              fontSize: 18,
-              color: items[idx].isCredit()
-                  ? const Color.fromARGB(255, 219, 68, 55)
-                  : const Color.fromARGB(255, 15, 157, 88),
-            ),
-          )
+          // Row(
+          //   children: [
+          //     Text(
+          //       '${items[idx].price.toString()} DT',
+          //       style: TextStyle(
+          //         fontSize: 18,
+          //         color: items[idx].isCredit()
+          //             ? const Color.fromARGB(255, 219, 68, 55)
+          //             : const Color.fromARGB(255, 15, 157, 88),
+          //       ),
+          //     )
+          //   ],
+          // )
         ],
       ),
     );
