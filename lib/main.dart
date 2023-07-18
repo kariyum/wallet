@@ -108,6 +108,10 @@ class Item {
 
     return '${months[month! - 1]} ${day.toString()}$s';
   }
+
+  Future<void> delete(id) async {
+    await DatabaseRepository.instance.deleteItem(id);
+  }
 }
 
 class DatabaseRepository {
@@ -165,6 +169,19 @@ class DatabaseRepository {
     try {
       final db = await instance.database;
       await db.delete('users');
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<void> deleteItem(int id) async {
+    try {
+      final db = await instance.database;
+      await db.delete(
+        'items',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -352,6 +369,16 @@ class _MyHomePageState extends State<MyHomePage> {
     flattened = res;
   }
 
+  int isSelected = -1;
+  // final ScrollController _controller = ScrollController();
+  void _animateToIndex(int index) {
+    _scrollController.animateTo(
+      index * -200,
+      duration: Duration(seconds: 2),
+      curve: Curves.fastOutSlowIn,
+    );
+  }
+
   final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
@@ -443,23 +470,110 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
                 Flexible(
-                  child: Container(
-                    color: Theme.of(context).colorScheme.background,
-                    child: ListView.separated(
-                      controller: _scrollController,
-                      separatorBuilder: (BuildContext context, int index) =>
-                          const Divider(),
-                      reverse: true,
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      // padding: EdgeInsets.all(16.0),
-                      // itemCount: flattened.length,
-                      // itemBuilder: (context, i) {
-                      //   return flattened[i];
-                      // },
-                      itemCount: items.length,
-                      itemBuilder: itemBuilderSimple,
-                    ),
+                  child: Stack(
+                    children: [
+                      Container(
+                        color: Theme.of(context).colorScheme.background,
+                        child: ListView.separated(
+                          controller: _scrollController,
+                          separatorBuilder: (BuildContext context, int index) =>
+                              const Divider(),
+                          // reverse: true,
+                          scrollDirection: Axis.vertical,
+                          shrinkWrap: true,
+                          // padding: EdgeInsets.all(16.0),
+                          // itemCount: flattened.length,
+                          // itemBuilder: (context, i) {
+                          //   return flattened[i];
+                          // },
+                          itemCount: items.length,
+                          itemBuilder: itemBuilderSimple,
+                        ),
+                      ),
+                      if (isSelected != -1)
+                        Container(
+                          alignment: Alignment.bottomCenter,
+                          child: TapRegion(
+                            onTapOutside: (event) {
+                              setState(() {
+                                isSelected = -1;
+                              });
+                            },
+                            child: Container(
+                              height: 70,
+                              child: Flex(
+                                direction: Axis.horizontal,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Flexible(
+                                    fit: FlexFit.loose,
+                                    child: Container(
+                                      child: ElevatedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          shape: CircleBorder(),
+                                        ),
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(12.0),
+                                          child: Column(
+                                            children: [
+                                              Icon(Icons.delete),
+                                              Text('Delete')
+                                            ],
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          debugPrint("DELTED ????");
+                                          await DatabaseRepository.instance
+                                              .deleteItem(
+                                                  items[isSelected].id!);
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    'Transaction deleted !')),
+                                          );
+                                          setState(() {
+                                            items = items
+                                                .where((item) =>
+                                                    item.id !=
+                                                    items[isSelected].id)
+                                                .toList();
+                                            isSelected = -1;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  // This is for the EDIT button
+                                  // Flexible(
+                                  //   fit: FlexFit.tight,
+                                  //   child: Container(
+                                  //     child: IconButton(
+                                  //       style: ButtonStyle(
+                                  //         shape: MaterialStateProperty.all<
+                                  //             RoundedRectangleBorder>(
+                                  //           const RoundedRectangleBorder(
+                                  //             borderRadius: BorderRadius.zero,
+                                  //           ),
+                                  //         ),
+                                  //       ),
+                                  //       icon: const Column(
+                                  //         children: [Icon(Icons.edit), Text('Edit')],
+                                  //       ),
+                                  //       onPressed: () {
+
+                                  //       },
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                    ],
                   ),
                 ),
               ],
@@ -517,50 +631,61 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget? itemBuilderSimple(BuildContext context, int idx) {
-    return ListTile(
-      leading: Icon(
-        items[idx].isCredit() ? Icons.shopping_bag : Icons.paid,
-        color: const Color.fromARGB(
-            255, 66, 133, 244), //Theme.of(context).colorScheme.onSurfaceVariant
-      ),
-      subtitle: Text(items[idx].note(),
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          )),
-      trailing: Text(
-        '${items[idx].price.toString()} DT',
-        style: TextStyle(
-          fontSize: 18,
-          color: items[idx].isCredit()
-              ? Color.fromARGB(255, 219, 68, 55)
-              : const Color.fromARGB(255, 15, 157, 88),
+    idx = items.length - idx - 1;
+    return Container(
+      color: isSelected == idx ? Colors.grey[300]: null,
+      child: ListTile(
+        selected: isSelected == idx,
+        
+        onLongPress: () {
+          setState(() {
+            isSelected = idx;
+          });
+        },
+        leading: Icon(
+          items[idx].isCredit() ? Icons.shopping_bag : Icons.paid,
+          color: const Color.fromARGB(
+              255, 66, 133, 244), //Theme.of(context).colorScheme.onSurfaceVariant
         ),
-      ),
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            items[idx].title,
-            style: const TextStyle(
-              fontSize: 21,
-            ),
+        subtitle: Text(items[idx].note(),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            )),
+        trailing: Text(
+          '${items[idx].price.toString()} DT',
+          style: TextStyle(
+            fontSize: 18,
+            color: items[idx].isCredit()
+                ? Color.fromARGB(255, 219, 68, 55)
+                : const Color.fromARGB(255, 15, 157, 88),
           ),
-          // Row(
-          //   children: [
-          //     Text(
-          //       '${items[idx].price.toString()} DT',
-          //       style: TextStyle(
-          //         fontSize: 18,
-          //         color: items[idx].isCredit()
-          //             ? const Color.fromARGB(255, 219, 68, 55)
-          //             : const Color.fromARGB(255, 15, 157, 88),
-          //       ),
-          //     )
-          //   ],
-          // )
-        ],
+        ),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              items[idx].title,
+              style: const TextStyle(
+                fontSize: 21,
+              ),
+            ),
+            // Row(
+            //   children: [
+            //     Text(
+            //       '${items[idx].price.toString()} DT',
+            //       style: TextStyle(
+            //         fontSize: 18,
+            //         color: items[idx].isCredit()
+            //             ? const Color.fromARGB(255, 219, 68, 55)
+            //             : const Color.fromARGB(255, 15, 157, 88),
+            //       ),
+            //     )
+            //   ],
+            // )
+          ],
+        ),
       ),
     );
   }
@@ -694,9 +819,11 @@ class _MyHomePageState extends State<MyHomePage> {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter a number';
                               }
-                              priceController.text = priceController.text.replaceAll(',', '.');
+                              priceController.text =
+                                  priceController.text.replaceAll(',', '.');
                               value = priceController.text;
-                              RegExp pattern = RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
+                              RegExp pattern =
+                                  RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
                               if (!pattern.hasMatch(value)) {
                                 return 'Please insert only numbers';
                               }
