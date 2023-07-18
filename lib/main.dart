@@ -105,7 +105,7 @@ class Item {
       default:
         s = 'th';
     }
-    
+
     return '${months[month! - 1]} ${day.toString()}$s';
   }
 }
@@ -380,12 +380,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 Container(
                   alignment: Alignment.topLeft,
                   margin: const EdgeInsets.all(8.0),
-                  child: const Text(
+                  child: Text(
                     "Total expenses",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    // style: TextStyle(
+                    //   fontSize: 24,
+                    //   fontWeight: FontWeight.bold,
+                    // ),
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
                 ),
                 Center(
@@ -407,13 +408,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Container(
-                      margin: const EdgeInsets.all(16.0),
-                      child: const Text(
+                      margin: const EdgeInsets.all(8.0),
+                      child: Text(
                         "Transactions",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleLarge,
+                        // style: TextStyle(
+                        //   fontSize: 18,
+                        //   fontWeight: FontWeight.bold,
+                        // ),
                       ),
                     ),
                     Container(
@@ -441,20 +443,23 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
                 Flexible(
-                  child: ListView.separated(
-                    controller: _scrollController,
-                    separatorBuilder: (BuildContext context, int index) =>
-                        const Divider(),
-                    reverse: true,
-                    scrollDirection: Axis.vertical,
-                    shrinkWrap: true,
-                    // padding: EdgeInsets.all(16.0),
-                    // itemCount: flattened.length,
-                    // itemBuilder: (context, i) {
-                    //   return flattened[i];
-                    // },
-                    itemCount: items.length,
-                    itemBuilder: itemBuilderSimple,
+                  child: Container(
+                    color: Theme.of(context).colorScheme.background,
+                    child: ListView.separated(
+                      controller: _scrollController,
+                      separatorBuilder: (BuildContext context, int index) =>
+                          const Divider(),
+                      reverse: true,
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      // padding: EdgeInsets.all(16.0),
+                      // itemCount: flattened.length,
+                      // itemBuilder: (context, i) {
+                      //   return flattened[i];
+                      // },
+                      itemCount: items.length,
+                      itemBuilder: itemBuilderSimple,
+                    ),
                   ),
                 ),
               ],
@@ -515,15 +520,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return ListTile(
       leading: Icon(
         items[idx].isCredit() ? Icons.shopping_bag : Icons.paid,
-        color: Color.fromARGB(255, 66 ,133, 244),
+        color: const Color.fromARGB(
+            255, 66, 133, 244), //Theme.of(context).colorScheme.onSurfaceVariant
       ),
-      subtitle: Text(
-        items[idx].note(),
-        style: TextStyle(
-          fontSize: 14,
-          color: Colors.grey[600],
-        )
-      ),
+      subtitle: Text(items[idx].note(),
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+          )),
       trailing: Text(
         '${items[idx].price.toString()} DT',
         style: TextStyle(
@@ -618,14 +622,22 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _credit() {
-    final thisItem = Item(
-      price: 0 - double.parse(priceController.text),
-      title: titleController.text,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-    );
-    Navigator.of(context).pop(thisItem);
+    if (_formKey.currentState!.validate()) {
+      // If the form is valid, display a snackbar. In the real world,
+      // you'd often call a server or save the information in a database.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Transaction saved !')),
+      );
+      final thisItem = Item(
+        price: 0 - double.parse(priceController.text),
+        title: titleController.text,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
+      Navigator.of(context).pop(thisItem);
+    }
   }
 
+  final _formKey = GlobalKey<FormState>();
   Future<Item?> openDialog2() {
     titleController.text = '';
     priceController.text = '';
@@ -642,49 +654,72 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 300,
                 child: Padding(
                   padding: const EdgeInsets.all(0.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                        child: TextFormField(
-                          textCapitalization: TextCapitalization.sentences,
-                          controller: titleController,
-                          autofocus: true,
-                          decoration: const InputDecoration(
-                            alignLabelWithHint: true,
-                            labelText: 'Item',
-                            labelStyle: TextStyle(
-                              fontSize: 18,
-                            ),
-                            // border: OutlineInputBorder(),
-                          ),
-                          textInputAction: TextInputAction.next,
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                        child: TextFormField(
-                          controller: priceController,
-                          decoration: const InputDecoration(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                          child: TextFormField(
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter some text';
+                              }
+                              return null;
+                            },
+                            textCapitalization: TextCapitalization.sentences,
+                            controller: titleController,
+                            autofocus: true,
+                            decoration: const InputDecoration(
                               alignLabelWithHint: true,
-                              labelText: 'Price',
+                              labelText: 'Item',
                               labelStyle: TextStyle(
                                 fontSize: 18,
-                              )
-                              // border: OutlineInputBorder(),
                               ),
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (value) {
-                            _credit();
-                          },
+                              // border: OutlineInputBorder(),
+                            ),
+                            textInputAction: TextInputAction.next,
+                          ),
                         ),
-                      )
-                    ],
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                          child: TextFormField(
+                            validator: (value) {
+                              debugPrint(
+                                  "************************************");
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a number';
+                              }
+                              priceController.text = priceController.text.replaceAll(',', '.');
+                              value = priceController.text;
+                              RegExp pattern = RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
+                              if (!pattern.hasMatch(value)) {
+                                return 'Please insert only numbers';
+                              }
+                              return null;
+                            },
+                            controller: priceController,
+                            decoration: const InputDecoration(
+                                alignLabelWithHint: true,
+                                labelText: 'Price',
+                                labelStyle: TextStyle(
+                                  fontSize: 18,
+                                )
+                                // border: OutlineInputBorder(),
+                                ),
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (value) {
+                              _credit();
+                            },
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -711,12 +746,19 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         TextButton(
                           onPressed: () {
-                            final thisItem = Item(
-                              price: double.parse(priceController.text),
-                              title: titleController.text,
-                              timestamp: DateTime.now().millisecondsSinceEpoch,
-                            );
-                            Navigator.of(context).pop(thisItem);
+                            if (_formKey.currentState!.validate()) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Transaction saved !')),
+                              );
+                              final thisItem = Item(
+                                price: double.parse(priceController.text),
+                                title: titleController.text,
+                                timestamp:
+                                    DateTime.now().millisecondsSinceEpoch,
+                              );
+                              Navigator.of(context).pop(thisItem);
+                            }
                           },
                           child: const Text(
                             "Debit",
@@ -731,7 +773,9 @@ class _MyHomePageState extends State<MyHomePage> {
                               EdgeInsets.only(right: 0.0),
                             ),
                           ),
-                          onPressed: _credit,
+                          onPressed: () {
+                            _credit();
+                          },
                           child: const Text(
                             "Credit",
                             style: TextStyle(
