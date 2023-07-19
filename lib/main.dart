@@ -633,10 +633,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget? itemBuilderSimple(BuildContext context, int idx) {
     idx = items.length - idx - 1;
     return Container(
-      color: isSelected == idx ? Colors.grey[300]: null,
+      color: isSelected == idx ? Colors.grey[300] : null,
       child: ListTile(
         selected: isSelected == idx,
-        
         onLongPress: () {
           setState(() {
             isSelected = idx;
@@ -644,8 +643,8 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         leading: Icon(
           items[idx].isCredit() ? Icons.shopping_bag : Icons.paid,
-          color: const Color.fromARGB(
-              255, 66, 133, 244), //Theme.of(context).colorScheme.onSurfaceVariant
+          color: const Color.fromARGB(255, 66, 133,
+              244), //Theme.of(context).colorScheme.onSurfaceVariant
         ),
         subtitle: Text(items[idx].note(),
             style: TextStyle(
@@ -786,25 +785,64 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                          child: TextFormField(
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter some text';
-                              }
-                              return null;
+                          child: Autocomplete(
+                            optionsViewBuilder: (context, onSelected, options) {
+                              return Material(
+                                child: Container(
+                                  height: 300,
+                                  width: 300,
+                                  child: ListView.builder(
+                                      itemCount: options.length,
+                                      itemBuilder: (context, index) {
+                                        final suggestion = options.elementAt(index);
+                                        return ListTile(
+                                          title: Text(suggestion),
+                                        );
+                                      }),
+                                ),
+                              );
                             },
-                            textCapitalization: TextCapitalization.sentences,
-                            controller: titleController,
-                            autofocus: true,
-                            decoration: const InputDecoration(
-                              alignLabelWithHint: true,
-                              labelText: 'Item',
-                              labelStyle: TextStyle(
-                                fontSize: 18,
-                              ),
-                              // border: OutlineInputBorder(),
-                            ),
-                            textInputAction: TextInputAction.next,
+                            displayStringForOption: (option) => option,
+                            optionsBuilder: (textEditingValue) {
+                              debugPrint("************OPTIONS BUILDER !!!");
+                              final x = items.map((e) => e.title).toList();
+                              if (textEditingValue.text == '') {
+                                return const Iterable<String>.empty();
+                              } else {
+                                debugPrint(x.where(
+                                    (e) => e.startsWith(textEditingValue.text)).toString());
+                                return x.where(
+                                    (e) => e.startsWith(textEditingValue.text));
+                              }
+                            },
+                            fieldViewBuilder: (BuildContext context,
+                                TextEditingController
+                                    fieldTextEditingController,
+                                FocusNode fieldFocusNode,
+                                VoidCallback onFieldSubmitted) {
+                              return TextFormField(
+                                focusNode: fieldFocusNode,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter some text';
+                                  }
+                                  return null;
+                                },
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                controller: fieldTextEditingController,
+                                autofocus: true,
+                                decoration: const InputDecoration(
+                                  alignLabelWithHint: true,
+                                  labelText: 'Item',
+                                  labelStyle: TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                  // border: OutlineInputBorder(),
+                                ),
+                                textInputAction: TextInputAction.next,
+                              );
+                            },
                           ),
                         ),
                         const Padding(
@@ -814,8 +852,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                           child: TextFormField(
                             validator: (value) {
-                              debugPrint(
-                                  "************************************");
                               if (value == null || value.isEmpty) {
                                 return 'Please enter a number';
                               }
