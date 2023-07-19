@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
-
+import 'package:flutter/scheduler.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/services.dart';
@@ -785,20 +785,67 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                          // child: Autocomplete<String>(
+                          //   optionsBuilder:
+                          //       (TextEditingValue textEditingValue) {
+                          //     if (textEditingValue.text == '') {
+                          //       return const Iterable<String>.empty();
+                          //     }
+                          //     return ["ok", "hello"].where((String option) {
+                          //       return option.contains(
+                          //           textEditingValue.text.toLowerCase());
+                          //     });
+                          //   },
+                          //   onSelected: (String selection) {
+                          //     debugPrint('You just selected $selection');
+                          //   },
+                          // ),
                           child: Autocomplete(
                             optionsViewBuilder: (context, onSelected, options) {
-                              return Material(
-                                child: Container(
-                                  height: 300,
-                                  width: 300,
-                                  child: ListView.builder(
+                              return Align(
+                                alignment: Alignment.topLeft,
+                                child: Material(
+                                  elevation: 4.0,
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(maxWidth: 285),
+                                    child: ListView.builder(
+                                      padding: EdgeInsets.zero,
+                                      shrinkWrap: true,
                                       itemCount: options.length,
                                       itemBuilder: (context, index) {
-                                        final suggestion = options.elementAt(index);
-                                        return ListTile(
-                                          title: Text(suggestion),
+                                        final option = options.elementAt(index);
+                                        return InkWell(
+                                          onTap: () {
+                                            onSelected(option);
+                                          },
+                                          child: Builder(
+                                              builder: (BuildContext context) {
+                                            final bool highlight =
+                                                AutocompleteHighlightedOption
+                                                        .of(context) ==
+                                                    index;
+                                            if (highlight) {
+                                              SchedulerBinding.instance
+                                                  .addPostFrameCallback(
+                                                      (Duration timeStamp) {
+                                                Scrollable.ensureVisible(
+                                                    context,
+                                                    alignment: 0.5);
+                                              });
+                                            }
+                                            return Container(
+                                              color: highlight
+                                                  ? Theme.of(context).focusColor
+                                                  : null,
+                                              padding:
+                                                  const EdgeInsets.all(16.0),
+                                              child: Text(option),
+                                            );
+                                          }),
                                         );
-                                      }),
+                                      },
+                                    ),
+                                  ),
                                 ),
                               );
                             },
@@ -809,10 +856,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               if (textEditingValue.text == '') {
                                 return const Iterable<String>.empty();
                               } else {
-                                debugPrint(x.where(
-                                    (e) => e.startsWith(textEditingValue.text)).toString());
-                                return x.where(
-                                    (e) => e.startsWith(textEditingValue.text));
+                                return x.toSet().where(
+                                    (e) => e.toLowerCase().startsWith(textEditingValue.text.toLowerCase()));
                               }
                             },
                             fieldViewBuilder: (BuildContext context,
@@ -820,6 +865,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                     fieldTextEditingController,
                                 FocusNode fieldFocusNode,
                                 VoidCallback onFieldSubmitted) {
+                                  fieldTextEditingController.addListener(() {
+                                    titleController.text = fieldTextEditingController.text;
+                                  });
                               return TextFormField(
                                 focusNode: fieldFocusNode,
                                 validator: (value) {
