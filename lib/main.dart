@@ -4,8 +4,6 @@ import 'package:path/path.dart' as p;
 import 'package:flutter/scheduler.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter/services.dart';
-
 void main() {
   runApp(const MyApp());
 }
@@ -60,7 +58,7 @@ class Item {
   }
 
   Map<String, dynamic> toMap() {
-    return {'id': id, 'title': title, 'price': price, 'timestamp': timestamp};
+    return {'id': id, 'title': title[0].toUpperCase() + title.substring(1), 'price': price, 'timestamp': timestamp};
   }
 
   @override
@@ -304,7 +302,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final res = items.isEmpty
         ? 0.0
         : items.map((e) => e.price).reduce((value, element) => value + element);
-    return double.parse(((res * 100).roundToDouble() / 100).toStringAsFixed(2));
+    return double.parse(((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
   }
 
   Map<String, List<Item>> itemsByDate = {};
@@ -446,7 +444,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     Container(
-                      margin: const EdgeInsets.all(16.0),
+                      margin: const EdgeInsets.only(right: 8.0),
                       child: IconButton(
                         onPressed: () async {
                           // Navigator.of(context)
@@ -492,6 +490,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       if (isSelected != -1)
                         Container(
+                          padding: const EdgeInsets.only(bottom: 10.0),
                           alignment: Alignment.bottomCenter,
                           child: TapRegion(
                             onTapOutside: (event) {
@@ -807,7 +806,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 child: Material(
                                   elevation: 4.0,
                                   child: ConstrainedBox(
-                                    constraints: BoxConstraints(maxWidth: 285),
+                                    constraints: const BoxConstraints(maxWidth: 285),
                                     child: ListView.builder(
                                       padding: EdgeInsets.zero,
                                       shrinkWrap: true,
@@ -851,7 +850,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             },
                             displayStringForOption: (option) => option,
                             optionsBuilder: (textEditingValue) {
-                              debugPrint("************OPTIONS BUILDER !!!");
                               final x = items.map((e) => e.title).toList();
                               if (textEditingValue.text == '') {
                                 return const Iterable<String>.empty();
@@ -874,6 +872,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter some text';
                                   }
+                                  titleController.text = titleController.text.trim();
                                   return null;
                                 },
                                 textCapitalization:
@@ -946,10 +945,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       onPressed: () {
                         Navigator.of(context).pop(null);
                       },
-                      child: const Text(
+                      child: Text(
                         "Cancel",
                         style: TextStyle(
                           fontSize: 16,
+                          color: Colors.grey[500],
                         ),
                       ),
                     ),
