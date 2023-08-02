@@ -26,17 +26,17 @@ class Item {
   factory Item.fromJson(Map<String, dynamic> map) {
     DateTime d =
         DateTime.fromMillisecondsSinceEpoch(map['timestamp']).toLocal();
-    print(Item(
-      id: map['id'],
-      price: map['price'],
-      timestamp: map['timestamp'],
-      title: map['title'],
-      day: d.day,
-      hour: d.hour,
-      minute: d.minute,
-      month: d.month,
-      year: d.year,
-    ).toString());
+    // print(Item(
+    //   id: map['id'],
+    //   price: map['price'],
+    //   timestamp: map['timestamp'],
+    //   title: map['title'],
+    //   day: d.day,
+    //   hour: d.hour,
+    //   minute: d.minute,
+    //   month: d.month,
+    //   year: d.year,
+    // ).toString());
     return Item(
       id: map['id'],
       price: map['price'],

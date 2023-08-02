@@ -37,7 +37,7 @@ class DatabaseRepository {
     try {
       final db = await instance.database;
       await db.insert('items', item.toMap());
-      print('inserted');
+      // print('inserted');
     } catch (e) {
       print(e.toString());
     }

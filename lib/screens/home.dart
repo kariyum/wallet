@@ -38,8 +38,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // });
   }
 
-
-
   void initDb() async {
     // await deleteDatabase();
     await DatabaseRepository.instance.database;
@@ -51,14 +49,6 @@ class _MyHomePageState extends State<MyHomePage> {
     priceController.dispose();
 
     super.dispose();
-  }
-
-  bool isExpanded = false;
-
-  void toggleExpansion() {
-    setState(() {
-      isExpanded = !isExpanded;
-    });
   }
 
   Future<List<Item>> getAllItmes() async {
@@ -78,8 +68,9 @@ class _MyHomePageState extends State<MyHomePage> {
   double totalExpenses() {
     final res = items.isEmpty
         ? 0.0
-        : items.map((e) => e.price).reduce((value, element) => value + element);
-    return double.parse(((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
+        : items.map((e) => e.price).reduce((priceA, priceB) => priceA + priceB);
+    return double.parse(
+        ((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
   }
 
   Map<String, List<Item>> itemsByDate = {};
@@ -95,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         itemsByDate[mapKey]!.add(itm);
       }
-      debugPrint(itemsByDate.toString());
+      // debugPrint(itemsByDate.toString());
     }
     flattenItemsByDate();
   }
@@ -229,7 +220,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           //   builder: (context) => openDialog(),
                           // ));
                           // openDialog();
-                          final x = await openDialog2();
+                          // final x = await openDialog2();
+                          final x = await openFullScreenDialog();
                           if (x == null) {
                             debugPrint(x.toString());
                           } else {
@@ -300,16 +292,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                           ),
                                         ),
                                         onPressed: () async {
-                                          debugPrint("DELTED ????");
+                                          // debugPrint("DELTED ????");
                                           await DatabaseRepository.instance
-                                              .deleteItem(
-                                                  items[isSelected].id!);
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                                content: Text(
-                                                    'Transaction deleted !')),
-                                          );
+                                              .deleteItem(items[isSelected].id!)
+                                              .then((value) =>
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                        content: Text(
+                                                            'Transaction deleted !')),
+                                                  ));
                                           setState(() {
                                             items = items
                                                 .where((item) =>
@@ -418,7 +410,7 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         },
         leading: Icon(
-          items[idx].isCredit() ? Icons.shopping_bag : Icons.paid,
+          items[idx].isCredit() ? Icons.paid : Icons.paid_outlined,
           color: const Color.fromARGB(255, 66, 133,
               244), //Theme.of(context).colorScheme.onSurfaceVariant
         ),
@@ -432,7 +424,7 @@ class _MyHomePageState extends State<MyHomePage> {
           style: TextStyle(
             fontSize: 18,
             color: items[idx].isCredit()
-                ? Color.fromARGB(255, 219, 68, 55)
+                ? const Color.fromARGB(255, 219, 68, 55)
                 : const Color.fromARGB(255, 15, 157, 88),
           ),
         ),
@@ -481,14 +473,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     onFieldSubmitted: (value) async {
                       // await DatabaseRepository.instance.deletePin();
                       // debugPrint("Deleting pin");
-                      debugPrint(value.length.toString());
                       final x = await DatabaseRepository.instance.readPin();
-                      debugPrint(x.toString());
                       if (x.isEmpty) {
                         value = value.isEmpty ? "-1" : value;
                         await DatabaseRepository.instance.insertPin(pin: value);
-                        final xx = await DatabaseRepository.instance.readPin();
-                        debugPrint(xx.toString());
+                        // final xx = await DatabaseRepository.instance.readPin();
+                        // debugPrint(xx.toString());
                         setState(() {
                           _islocked = false;
                         });
@@ -537,6 +527,253 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<Item?> openFullScreenDialog() {
+    titleController.text = '';
+    priceController.text = '';
+    return showGeneralDialog(
+      context: context,
+      pageBuilder: (context, a, b) => Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            toolbarHeight: 70.0,
+            title: const Text("New transaction"),
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+          bottomNavigationBar: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              TextButton(
+                style: ButtonStyle(
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero,
+                    ),
+                  ),
+                ),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Transaction saved !')),
+                    );
+                    final thisItem = Item(
+                      price: double.parse(priceController.text),
+                      title: titleController.text,
+                      timestamp: DateTime.now().millisecondsSinceEpoch,
+                    );
+                    Navigator.of(context).pop(thisItem);
+                  }
+                },
+                child: const Text(
+                  "Debit",
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              TextButton(
+                style: const ButtonStyle(
+                  padding: MaterialStatePropertyAll(
+                    EdgeInsets.only(right: 0.0),
+                  ),
+                ),
+                onPressed: () {
+                  _credit();
+                },
+                child: const Text(
+                  "Credit",
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Stack(
+                  children: [
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 8.0, right: 8.0),
+                            // child: Autocomplete<String>(
+                            //   optionsBuilder:
+                            //       (TextEditingValue textEditingValue) {
+                            //     if (textEditingValue.text == '') {
+                            //       return const Iterable<String>.empty();
+                            //     }
+                            //     return ["ok", "hello"].where((String option) {
+                            //       return option.contains(
+                            //           textEditingValue.text.toLowerCase());
+                            //     });
+                            //   },
+                            //   onSelected: (String selection) {
+                            //     debugPrint('You just selected $selection');
+                            //   },
+                            // ),
+                            child: Autocomplete(
+                              optionsViewBuilder:
+                                  (context, onSelected, options) {
+                                return Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Material(
+                                    elevation: 4.0,
+                                    child: ConstrainedBox(
+                                      constraints:
+                                          const BoxConstraints(maxWidth: 285),
+                                      child: ListView.builder(
+                                        padding: EdgeInsets.zero,
+                                        shrinkWrap: true,
+                                        itemCount: options.length,
+                                        itemBuilder: (context, index) {
+                                          final option =
+                                              options.elementAt(index);
+                                          return InkWell(
+                                            onTap: () {
+                                              onSelected(option);
+                                            },
+                                            child: Builder(builder:
+                                                (BuildContext context) {
+                                              final bool highlight =
+                                                  AutocompleteHighlightedOption
+                                                          .of(context) ==
+                                                      index;
+                                              if (highlight) {
+                                                SchedulerBinding.instance
+                                                    .addPostFrameCallback(
+                                                        (Duration timeStamp) {
+                                                  Scrollable.ensureVisible(
+                                                      context,
+                                                      alignment: 0.5);
+                                                });
+                                              }
+                                              return Container(
+                                                color: highlight
+                                                    ? Theme.of(context)
+                                                        .focusColor
+                                                    : null,
+                                                padding:
+                                                    const EdgeInsets.all(16.0),
+                                                child: Text(option),
+                                              );
+                                            }),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              displayStringForOption: (option) => option,
+                              optionsBuilder: (textEditingValue) {
+                                final x = items.map((e) => e.title).toList();
+                                if (textEditingValue.text == '') {
+                                  return const Iterable<String>.empty();
+                                } else {
+                                  return x.toSet().where((e) => e
+                                      .toLowerCase()
+                                      .startsWith(
+                                          textEditingValue.text.toLowerCase()));
+                                }
+                              },
+                              fieldViewBuilder: (BuildContext context,
+                                  TextEditingController
+                                      fieldTextEditingController,
+                                  FocusNode fieldFocusNode,
+                                  VoidCallback onFieldSubmitted) {
+                                fieldTextEditingController.addListener(() {
+                                  titleController.text =
+                                      fieldTextEditingController.text;
+                                });
+                                return TextFormField(
+                                  focusNode: fieldFocusNode,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter some text';
+                                    }
+                                    titleController.text =
+                                        titleController.text.trim();
+                                    return null;
+                                  },
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  controller: fieldTextEditingController,
+                                  autofocus: true,
+                                  decoration: const InputDecoration(
+                                    alignLabelWithHint: true,
+                                    labelText: 'Item',
+                                    labelStyle: TextStyle(
+                                      fontSize: 18,
+                                    ),
+                                    // border: OutlineInputBorder(),
+                                  ),
+                                  textInputAction: TextInputAction.next,
+                                );
+                              },
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 8.0, right: 8.0),
+                            child: TextFormField(
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a number';
+                                }
+                                priceController.text =
+                                    priceController.text.replaceAll(',', '.');
+                                value = priceController.text;
+                                RegExp pattern =
+                                    RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
+                                if (!pattern.hasMatch(value)) {
+                                  return 'Please insert only numbers';
+                                }
+                                return null;
+                              },
+                              controller: priceController,
+                              decoration: const InputDecoration(
+                                  alignLabelWithHint: true,
+                                  labelText: 'Price',
+                                  labelStyle: TextStyle(
+                                    fontSize: 18,
+                                  )
+                                  // border: OutlineInputBorder(),
+                                  ),
+                              keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (value) {
+                                _credit();
+                              },
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   final _formKey = GlobalKey<FormState>();
   Future<Item?> openDialog2() {
     titleController.text = '';
@@ -583,7 +820,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 child: Material(
                                   elevation: 4.0,
                                   child: ConstrainedBox(
-                                    constraints: const BoxConstraints(maxWidth: 285),
+                                    constraints:
+                                        const BoxConstraints(maxWidth: 285),
                                     child: ListView.builder(
                                       padding: EdgeInsets.zero,
                                       shrinkWrap: true,
@@ -631,8 +869,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               if (textEditingValue.text == '') {
                                 return const Iterable<String>.empty();
                               } else {
-                                return x.toSet().where(
-                                    (e) => e.toLowerCase().startsWith(textEditingValue.text.toLowerCase()));
+                                return x.toSet().where((e) => e
+                                    .toLowerCase()
+                                    .startsWith(
+                                        textEditingValue.text.toLowerCase()));
                               }
                             },
                             fieldViewBuilder: (BuildContext context,
@@ -640,16 +880,18 @@ class _MyHomePageState extends State<MyHomePage> {
                                     fieldTextEditingController,
                                 FocusNode fieldFocusNode,
                                 VoidCallback onFieldSubmitted) {
-                                  fieldTextEditingController.addListener(() {
-                                    titleController.text = fieldTextEditingController.text;
-                                  });
+                              fieldTextEditingController.addListener(() {
+                                titleController.text =
+                                    fieldTextEditingController.text;
+                              });
                               return TextFormField(
                                 focusNode: fieldFocusNode,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter some text';
                                   }
-                                  titleController.text = titleController.text.trim();
+                                  titleController.text =
+                                      titleController.text.trim();
                                   return null;
                                 },
                                 textCapitalization:
