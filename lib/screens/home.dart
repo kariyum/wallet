@@ -154,21 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //       _scrollController.jumpTo(_scrollController.position.maxScrollExtent));
     // }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context)
-            .colorScheme
-            .surface, //Theme.of(context).colorScheme.primaryContainer,
-        primary: true,
-        toolbarHeight: 10,
-        scrolledUnderElevation: 0.0,
-        // title: const Center(
-        //   child: Text("Wallet"),
-        // ),
-      ),
-      body: _islocked
-          ? showLockScreen()
-          : Column(
+    var homePage = Column(
               children: [
                 Container(
                   alignment: Alignment.topLeft,
@@ -276,7 +262,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Flexible(
-                                    fit: FlexFit.loose,
+                                    fit: FlexFit.tight,
                                     child: Container(
                                       child: ElevatedButton(
                                         style: OutlinedButton.styleFrom(
@@ -345,7 +331,22 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ],
-            ),
+            );
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context)
+            .colorScheme
+            .surface, //Theme.of(context).colorScheme.primaryContainer,
+        primary: true,
+        toolbarHeight: 10,
+        scrolledUnderElevation: 0.0,
+        // title: const Center(
+        //   child: Text("Wallet"),
+        // ),
+      ),
+      body: _islocked
+          ? showLockScreen()
+          : homePage,
     );
   }
 
@@ -545,226 +546,253 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           bottomNavigationBar: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            // mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            // crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextButton(
-                style: ButtonStyle(
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
+              Flexible(
+                fit: FlexFit.tight,
+                child: TextButton(
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Transaction saved !')),
+                      );
+                      final thisItem = Item(
+                        price: double.parse(priceController.text),
+                        title: titleController.text,
+                        timestamp: DateTime.now().millisecondsSinceEpoch,
+                      );
+                      Navigator.of(context).pop(thisItem);
+                    }
+                  },
+                  child: const Text(
+                    "Debit",
+                    style: TextStyle(
+                      fontSize: 20,
                     ),
                   ),
                 ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Transaction saved !')),
-                    );
-                    final thisItem = Item(
-                      price: double.parse(priceController.text),
-                      title: titleController.text,
-                      timestamp: DateTime.now().millisecondsSinceEpoch,
-                    );
-                    Navigator.of(context).pop(thisItem);
-                  }
-                },
-                child: const Text(
-                  "Debit",
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
               ),
-              TextButton(
-                style: const ButtonStyle(
-                  padding: MaterialStatePropertyAll(
-                    EdgeInsets.only(right: 0.0),
+              Flexible(
+                fit: FlexFit.tight,
+                child: TextButton(
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  _credit();
-                },
-                child: const Text(
-                  "Credit",
-                  style: TextStyle(
-                    fontSize: 16,
+                  onPressed: () {
+                    _credit();
+                  },
+                  child: const Text(
+                    "Credit",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
           body: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
             child: Column(
               children: [
-                Stack(
-                  children: [
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(left: 8.0, right: 8.0),
-                            // child: Autocomplete<String>(
-                            //   optionsBuilder:
-                            //       (TextEditingValue textEditingValue) {
-                            //     if (textEditingValue.text == '') {
-                            //       return const Iterable<String>.empty();
-                            //     }
-                            //     return ["ok", "hello"].where((String option) {
-                            //       return option.contains(
-                            //           textEditingValue.text.toLowerCase());
-                            //     });
-                            //   },
-                            //   onSelected: (String selection) {
-                            //     debugPrint('You just selected $selection');
-                            //   },
-                            // ),
-                            child: Autocomplete(
-                              optionsViewBuilder:
-                                  (context, onSelected, options) {
-                                return Align(
-                                  alignment: Alignment.topLeft,
-                                  child: Material(
-                                    elevation: 4.0,
-                                    child: ConstrainedBox(
-                                      constraints:
-                                          const BoxConstraints(maxWidth: 285),
-                                      child: ListView.builder(
-                                        padding: EdgeInsets.zero,
-                                        shrinkWrap: true,
-                                        itemCount: options.length,
-                                        itemBuilder: (context, index) {
-                                          final option =
-                                              options.elementAt(index);
-                                          return InkWell(
-                                            onTap: () {
-                                              onSelected(option);
-                                            },
-                                            child: Builder(builder:
-                                                (BuildContext context) {
-                                              final bool highlight =
-                                                  AutocompleteHighlightedOption
-                                                          .of(context) ==
-                                                      index;
-                                              if (highlight) {
-                                                SchedulerBinding.instance
-                                                    .addPostFrameCallback(
-                                                        (Duration timeStamp) {
-                                                  Scrollable.ensureVisible(
-                                                      context,
-                                                      alignment: 0.5);
-                                                });
-                                              }
-                                              return Container(
-                                                color: highlight
-                                                    ? Theme.of(context)
-                                                        .focusColor
-                                                    : null,
-                                                padding:
-                                                    const EdgeInsets.all(16.0),
-                                                child: Text(option),
-                                              );
-                                            }),
-                                          );
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(left: 8.0, right: 8.0),
+                        // child: Autocomplete<String>(
+                        //   optionsBuilder:
+                        //       (TextEditingValue textEditingValue) {
+                        //     if (textEditingValue.text == '') {
+                        //       return const Iterable<String>.empty();
+                        //     }
+                        //     return ["ok", "hello"].where((String option) {
+                        //       return option.contains(
+                        //           textEditingValue.text.toLowerCase());
+                        //     });
+                        //   },
+                        //   onSelected: (String selection) {
+                        //     debugPrint('You just selected $selection');
+                        //   },
+                        // ),
+                        child: Autocomplete(
+                          optionsViewBuilder:
+                              (context, onSelected, options) {
+                            return Align(
+                              alignment: Alignment.topLeft,
+                              child: Material(
+                                elevation: 4.0,
+                                child: ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 285),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    itemBuilder: (context, index) {
+                                      final option =
+                                          options.elementAt(index);
+                                      return InkWell(
+                                        onTap: () {
+                                          onSelected(option);
                                         },
-                                      ),
-                                    ),
+                                        child: Builder(builder:
+                                            (BuildContext context) {
+                                          final bool highlight =
+                                              AutocompleteHighlightedOption
+                                                      .of(context) ==
+                                                  index;
+                                          if (highlight) {
+                                            SchedulerBinding.instance
+                                                .addPostFrameCallback(
+                                                    (Duration timeStamp) {
+                                              Scrollable.ensureVisible(
+                                                  context,
+                                                  alignment: 0.5);
+                                            });
+                                          }
+                                          return Container(
+                                            color: highlight
+                                                ? Theme.of(context)
+                                                    .focusColor
+                                                : null,
+                                            padding:
+                                                const EdgeInsets.all(16.0),
+                                            child: Text(option),
+                                          );
+                                        }),
+                                      );
+                                    },
                                   ),
-                                );
-                              },
-                              displayStringForOption: (option) => option,
-                              optionsBuilder: (textEditingValue) {
-                                final x = items.map((e) => e.title).toList();
-                                if (textEditingValue.text == '') {
-                                  return const Iterable<String>.empty();
-                                } else {
-                                  return x.toSet().where((e) => e
-                                      .toLowerCase()
-                                      .startsWith(
-                                          textEditingValue.text.toLowerCase()));
-                                }
-                              },
-                              fieldViewBuilder: (BuildContext context,
-                                  TextEditingController
-                                      fieldTextEditingController,
-                                  FocusNode fieldFocusNode,
-                                  VoidCallback onFieldSubmitted) {
-                                fieldTextEditingController.addListener(() {
-                                  titleController.text =
-                                      fieldTextEditingController.text;
-                                });
-                                return TextFormField(
-                                  focusNode: fieldFocusNode,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter some text';
-                                    }
-                                    titleController.text =
-                                        titleController.text.trim();
-                                    return null;
-                                  },
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  controller: fieldTextEditingController,
-                                  autofocus: true,
-                                  decoration: const InputDecoration(
-                                    alignLabelWithHint: true,
-                                    labelText: 'Item',
-                                    labelStyle: TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                    // border: OutlineInputBorder(),
-                                  ),
-                                  textInputAction: TextInputAction.next,
-                                );
-                              },
-                            ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(left: 8.0, right: 8.0),
-                            child: TextFormField(
+                                ),
+                              ),
+                            );
+                          },
+                          displayStringForOption: (option) => option,
+                          optionsBuilder: (textEditingValue) {
+                            final x = items.map((e) => e.title).toList();
+                            if (textEditingValue.text == '') {
+                              return const Iterable<String>.empty();
+                            } else {
+                              return x.toSet().where((e) => e
+                                  .toLowerCase()
+                                  .startsWith(
+                                      textEditingValue.text.toLowerCase()));
+                            }
+                          },
+                          fieldViewBuilder: (BuildContext context,
+                              TextEditingController
+                                  fieldTextEditingController,
+                              FocusNode fieldFocusNode,
+                              VoidCallback onFieldSubmitted) {
+                            fieldTextEditingController.addListener(() {
+                              titleController.text =
+                                  fieldTextEditingController.text;
+                            });
+                            return TextFormField(
+                              focusNode: fieldFocusNode,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter a number';
+                                  return 'Please enter some text';
                                 }
-                                priceController.text =
-                                    priceController.text.replaceAll(',', '.');
-                                value = priceController.text;
-                                RegExp pattern =
-                                    RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
-                                if (!pattern.hasMatch(value)) {
-                                  return 'Please insert only numbers';
-                                }
+                                titleController.text =
+                                    titleController.text.trim();
                                 return null;
                               },
-                              controller: priceController,
+                              textCapitalization:
+                                  TextCapitalization.sentences,
+                              controller: fieldTextEditingController,
+                              autofocus: true,
                               decoration: const InputDecoration(
-                                  alignLabelWithHint: true,
-                                  labelText: 'Price',
-                                  labelStyle: TextStyle(
-                                    fontSize: 18,
-                                  )
-                                  // border: OutlineInputBorder(),
-                                  ),
-                              keyboardType: TextInputType.number,
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (value) {
-                                _credit();
-                              },
-                            ),
-                          )
-                        ],
+                                alignLabelWithHint: true,
+                                labelText: 'Item',
+                                labelStyle: TextStyle(
+                                  fontSize: 18,
+                                ),
+                                // border: OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.next,
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
+                      ),
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(left: 8.0, right: 8.0),
+                        child: TextFormField(
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a number';
+                            }
+                            priceController.text =
+                                priceController.text.replaceAll(',', '.');
+                            value = priceController.text;
+                            RegExp pattern =
+                                RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
+                            if (!pattern.hasMatch(value)) {
+                              return 'Please insert only numbers';
+                            }
+                            return null;
+                          },
+                          controller: priceController,
+                          decoration: const InputDecoration(
+                              alignLabelWithHint: true,
+                              labelText: 'Price',
+                              labelStyle: TextStyle(
+                                fontSize: 18,
+                              )
+                              // border: OutlineInputBorder(),
+                              ),
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (value) {
+                            _credit();
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(8.0, 32.0, 8.0, 8.0),
+                        child: TextFormField(
+                          minLines: 4,
+                          maxLines: 10,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                              alignLabelWithHint: true,
+                              labelText: 'Description',
+                              labelStyle: TextStyle(
+                                fontSize: 18,
+                              )
+                              // border: OutlineInputBorder(),
+                              ),
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (value) {
+                            // _credit();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 )
               ],
             ),
