@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:walletapp/services/database.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:flutter/scheduler.dart';
+import 'dart:ui';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -13,6 +14,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController titleController;
   late TextEditingController priceController;
+  late TextEditingController notesController;
 
   bool isDialogOpen = false;
 
@@ -27,6 +29,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     priceController = TextEditingController();
     priceController.text = '';
+
+    notesController = TextEditingController();
+    notesController.text = '';
   }
 
   void skipLockScreen() async {
@@ -47,6 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     titleController.dispose();
     priceController.dispose();
+    notesController.dispose();
 
     super.dispose();
   }
@@ -155,183 +161,181 @@ class _MyHomePageState extends State<MyHomePage> {
     // }
 
     var homePage = Column(
-              children: [
-                Container(
-                  alignment: Alignment.topLeft,
-                  margin: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Total expenses",
-                    // style: TextStyle(
-                    //   fontSize: 24,
-                    //   fontWeight: FontWeight.bold,
-                    // ),
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
+      children: [
+        Container(
+          alignment: Alignment.topLeft,
+          margin: const EdgeInsets.all(8.0),
+          child: Text(
+            "Total expenses",
+            // style: TextStyle(
+            //   fontSize: 24,
+            //   fontWeight: FontWeight.bold,
+            // ),
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+        ),
+        Center(
+          child: SizedBox(
+            height: 150,
+            child: Center(
+              child: Text(
+                // '${totalExpenses().toString()} DT',
+                totalExpenses().toString(),
+                style: const TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
                 ),
-                Center(
-                  child: SizedBox(
-                    height: 150,
-                    child: Center(
-                      child: Text(
-                        // '${totalExpenses().toString()} DT',
-                        totalExpenses().toString(),
-                        style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+              ),
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Container(
+              margin: const EdgeInsets.all(8.0),
+              child: Text(
+                "Transactions",
+                style: Theme.of(context).textTheme.titleLarge,
+                // style: TextStyle(
+                //   fontSize: 18,
+                //   fontWeight: FontWeight.bold,
+                // ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                onPressed: () async {
+                  // Navigator.of(context)
+                  //     .push(MaterialPageRoute<void>(
+                  //   builder: (context) => openDialog(),
+                  // ));
+                  // openDialog();
+                  // final x = await openDialog2();
+                  final x = await openFullScreenDialog();
+                  if (x == null) {
+                    debugPrint(x.toString());
+                  } else {
+                    setState(() {
+                      x.persist();
+                      updateItems();
+                    });
+                  }
+                },
+                icon: const Icon(Icons.add),
+              ),
+            )
+          ],
+        ),
+        Flexible(
+          child: Stack(
+            children: [
+              Container(
+                color: Theme.of(context).colorScheme.background,
+                child: ListView.separated(
+                  controller: _scrollController,
+                  separatorBuilder: (BuildContext context, int index) =>
+                      const Divider(),
+                  // reverse: true,
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  // padding: EdgeInsets.all(16.0),
+                  // itemCount: flattened.length,
+                  // itemBuilder: (context, i) {
+                  //   return flattened[i];
+                  // },
+                  itemCount: items.length,
+                  itemBuilder: itemBuilderSimple,
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Container(
-                      margin: const EdgeInsets.all(8.0),
-                      child: Text(
-                        "Transactions",
-                        style: Theme.of(context).textTheme.titleLarge,
-                        // style: TextStyle(
-                        //   fontSize: 18,
-                        //   fontWeight: FontWeight.bold,
-                        // ),
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(right: 8.0),
-                      child: IconButton(
-                        onPressed: () async {
-                          // Navigator.of(context)
-                          //     .push(MaterialPageRoute<void>(
-                          //   builder: (context) => openDialog(),
-                          // ));
-                          // openDialog();
-                          // final x = await openDialog2();
-                          final x = await openFullScreenDialog();
-                          if (x == null) {
-                            debugPrint(x.toString());
-                          } else {
-                            setState(() {
-                              x.persist();
-                              updateItems();
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.add),
-                      ),
-                    )
-                  ],
-                ),
-                Flexible(
-                  child: Stack(
-                    children: [
-                      Container(
-                        color: Theme.of(context).colorScheme.background,
-                        child: ListView.separated(
-                          controller: _scrollController,
-                          separatorBuilder: (BuildContext context, int index) =>
-                              const Divider(),
-                          // reverse: true,
-                          scrollDirection: Axis.vertical,
-                          shrinkWrap: true,
-                          // padding: EdgeInsets.all(16.0),
-                          // itemCount: flattened.length,
-                          // itemBuilder: (context, i) {
-                          //   return flattened[i];
-                          // },
-                          itemCount: items.length,
-                          itemBuilder: itemBuilderSimple,
-                        ),
-                      ),
-                      if (isSelected != -1)
-                        Container(
-                          padding: const EdgeInsets.only(bottom: 10.0),
-                          alignment: Alignment.bottomCenter,
-                          child: TapRegion(
-                            onTapOutside: (event) {
-                              setState(() {
-                                isSelected = -1;
-                              });
-                            },
-                            child: Container(
-                              height: 70,
-                              child: Flex(
-                                direction: Axis.horizontal,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Flexible(
-                                    fit: FlexFit.tight,
-                                    child: Container(
-                                      child: ElevatedButton(
-                                        style: OutlinedButton.styleFrom(
-                                          shape: CircleBorder(),
-                                        ),
-                                        child: const Padding(
-                                          padding: EdgeInsets.all(12.0),
-                                          child: Column(
-                                            children: [
-                                              Icon(Icons.delete),
-                                              Text('Delete')
-                                            ],
-                                          ),
-                                        ),
-                                        onPressed: () async {
-                                          // debugPrint("DELTED ????");
-                                          await DatabaseRepository.instance
-                                              .deleteItem(items[isSelected].id!)
-                                              .then((value) =>
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    const SnackBar(
-                                                        content: Text(
-                                                            'Transaction deleted !')),
-                                                  ));
-                                          setState(() {
-                                            items = items
-                                                .where((item) =>
-                                                    item.id !=
-                                                    items[isSelected].id)
-                                                .toList();
-                                            isSelected = -1;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  // This is for the EDIT button
-                                  // Flexible(
-                                  //   fit: FlexFit.tight,
-                                  //   child: Container(
-                                  //     child: IconButton(
-                                  //       style: ButtonStyle(
-                                  //         shape: MaterialStateProperty.all<
-                                  //             RoundedRectangleBorder>(
-                                  //           const RoundedRectangleBorder(
-                                  //             borderRadius: BorderRadius.zero,
-                                  //           ),
-                                  //         ),
-                                  //       ),
-                                  //       icon: const Column(
-                                  //         children: [Icon(Icons.edit), Text('Edit')],
-                                  //       ),
-                                  //       onPressed: () {
+              ),
+              // if (isSelected != -1)
+              //   Container(
+              //     padding: const EdgeInsets.only(bottom: 10.0),
+              //     alignment: Alignment.bottomCenter,
+              //     child: TapRegion(
+              //       onTapOutside: (event) {
+              //         setState(() {
+              //           isSelected = -1;
+              //         });
+              //       },
+              //       child: Container(
+              //         height: 70,
+              //         child: Flex(
+              //           direction: Axis.horizontal,
+              //           mainAxisAlignment: MainAxisAlignment.spaceAround,
+              //           crossAxisAlignment: CrossAxisAlignment.stretch,
+              //           children: [
+              //             Flexible(
+              //               fit: FlexFit.tight,
+              //               child: Container(
+              //                 child: ElevatedButton(
+              //                   style: OutlinedButton.styleFrom(
+              //                     shape: CircleBorder(),
+              //                   ),
+              //                   child: const Padding(
+              //                     padding: EdgeInsets.all(12.0),
+              //                     child: Column(
+              //                       children: [
+              //                         Icon(Icons.delete),
+              //                         Text('Delete')
+              //                       ],
+              //                     ),
+              //                   ),
+              //                   onPressed: () async {
+              //                     // debugPrint("DELTED ????");
+              //                     await DatabaseRepository.instance
+              //                         .deleteItem(items[isSelected].id!)
+              //                         .then((value) =>
+              //                             ScaffoldMessenger.of(context)
+              //                                 .showSnackBar(
+              //                               const SnackBar(
+              //                                   content: Text(
+              //                                       'Transaction deleted !')),
+              //                             ));
+              //                     setState(() {
+              //                       items = items
+              //                           .where((item) =>
+              //                               item.id != items[isSelected].id)
+              //                           .toList();
+              //                       isSelected = -1;
+              //                     });
+              //                   },
+              //                 ),
+              //               ),
+              //             ),
+              //             // This is for the EDIT button
+              //             // Flexible(
+              //             //   fit: FlexFit.tight,
+              //             //   child: Container(
+              //             //     child: IconButton(
+              //             //       style: ButtonStyle(
+              //             //         shape: MaterialStateProperty.all<
+              //             //             RoundedRectangleBorder>(
+              //             //           const RoundedRectangleBorder(
+              //             //             borderRadius: BorderRadius.zero,
+              //             //           ),
+              //             //         ),
+              //             //       ),
+              //             //       icon: const Column(
+              //             //         children: [Icon(Icons.edit), Text('Edit')],
+              //             //       ),
+              //             //       onPressed: () {
 
-                                  //       },
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )
-                    ],
-                  ),
-                ),
-              ],
-            );
+              //             //       },
+              //             //     ),
+              //             //   ),
+              //             // ),
+              //           ],
+              //         ),
+              //       ),
+              //     ),
+              //   )
+            ],
+          ),
+        ),
+      ],
+    );
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context)
@@ -344,9 +348,7 @@ class _MyHomePageState extends State<MyHomePage> {
         //   child: Text("Wallet"),
         // ),
       ),
-      body: _islocked
-          ? showLockScreen()
-          : homePage,
+      body: _islocked ? showLockScreen() : homePage,
     );
   }
 
@@ -402,13 +404,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget? itemBuilderSimple(BuildContext context, int idx) {
     idx = items.length - idx - 1;
     return Container(
-      color: isSelected == idx ? Colors.grey[300] : null,
+      // color: isSelected == idx ? Colors.grey[300] : null,
       child: ListTile(
         selected: isSelected == idx,
-        onLongPress: () {
-          setState(() {
-            isSelected = idx;
-          });
+        onLongPress: () async {
+          isSelected = idx;
+          final x = await openDialogItem(items[idx]);
+          isSelected = -1;
         },
         leading: Icon(
           items[idx].isCredit() ? Icons.paid : Icons.paid_outlined,
@@ -429,29 +431,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 : const Color.fromARGB(255, 15, 157, 88),
           ),
         ),
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        title: Flex(
+          direction: Axis.horizontal,
           children: [
-            Text(
-              items[idx].title,
-              style: const TextStyle(
-                fontSize: 21,
+            Flexible(
+              child: Text(
+                overflow: TextOverflow.ellipsis,
+                items[idx].title,
+                style: const TextStyle(
+                  fontSize: 21,
+                ),
               ),
             ),
-            // Row(
-            //   children: [
-            //     Text(
-            //       '${items[idx].price.toString()} DT',
-            //       style: TextStyle(
-            //         fontSize: 18,
-            //         color: items[idx].isCredit()
-            //             ? const Color.fromARGB(255, 219, 68, 55)
-            //             : const Color.fromARGB(255, 15, 157, 88),
-            //       ),
-            //     )
-            //   ],
-            // )
           ],
         ),
       ),
@@ -523,6 +514,7 @@ class _MyHomePageState extends State<MyHomePage> {
         price: 0 - double.parse(priceController.text),
         title: titleController.text,
         timestamp: DateTime.now().millisecondsSinceEpoch,
+        notes: notesController.text,
       );
       Navigator.of(context).pop(thisItem);
     }
@@ -531,6 +523,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<Item?> openFullScreenDialog() {
     titleController.text = '';
     priceController.text = '';
+    notesController.text = '';
+
     return showGeneralDialog(
       context: context,
       pageBuilder: (context, a, b) => Dialog.fullscreen(
@@ -570,7 +564,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         price: double.parse(priceController.text),
                         title: titleController.text,
                         timestamp: DateTime.now().millisecondsSinceEpoch,
+                        notes: notesController.text,
                       );
+                      // debugPrint(thisItem.toString());
                       Navigator.of(context).pop(thisItem);
                     }
                   },
@@ -615,8 +611,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Padding(
-                        padding:
-                            const EdgeInsets.only(left: 8.0, right: 8.0),
+                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                         // child: Autocomplete<String>(
                         //   optionsBuilder:
                         //       (TextEditingValue textEditingValue) {
@@ -633,8 +628,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         //   },
                         // ),
                         child: Autocomplete(
-                          optionsViewBuilder:
-                              (context, onSelected, options) {
+                          optionsViewBuilder: (context, onSelected, options) {
                             return Align(
                               alignment: Alignment.topLeft,
                               child: Material(
@@ -647,34 +641,30 @@ class _MyHomePageState extends State<MyHomePage> {
                                     shrinkWrap: true,
                                     itemCount: options.length,
                                     itemBuilder: (context, index) {
-                                      final option =
-                                          options.elementAt(index);
+                                      final option = options.elementAt(index);
                                       return InkWell(
                                         onTap: () {
                                           onSelected(option);
                                         },
-                                        child: Builder(builder:
-                                            (BuildContext context) {
+                                        child: Builder(
+                                            builder: (BuildContext context) {
                                           final bool highlight =
-                                              AutocompleteHighlightedOption
-                                                      .of(context) ==
+                                              AutocompleteHighlightedOption.of(
+                                                      context) ==
                                                   index;
                                           if (highlight) {
                                             SchedulerBinding.instance
                                                 .addPostFrameCallback(
                                                     (Duration timeStamp) {
-                                              Scrollable.ensureVisible(
-                                                  context,
+                                              Scrollable.ensureVisible(context,
                                                   alignment: 0.5);
                                             });
                                           }
                                           return Container(
                                             color: highlight
-                                                ? Theme.of(context)
-                                                    .focusColor
+                                                ? Theme.of(context).focusColor
                                                 : null,
-                                            padding:
-                                                const EdgeInsets.all(16.0),
+                                            padding: const EdgeInsets.all(16.0),
                                             child: Text(option),
                                           );
                                         }),
@@ -698,8 +688,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             }
                           },
                           fieldViewBuilder: (BuildContext context,
-                              TextEditingController
-                                  fieldTextEditingController,
+                              TextEditingController fieldTextEditingController,
                               FocusNode fieldFocusNode,
                               VoidCallback onFieldSubmitted) {
                             fieldTextEditingController.addListener(() {
@@ -716,8 +705,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     titleController.text.trim();
                                 return null;
                               },
-                              textCapitalization:
-                                  TextCapitalization.sentences,
+                              textCapitalization: TextCapitalization.sentences,
                               controller: fieldTextEditingController,
                               autofocus: true,
                               decoration: const InputDecoration(
@@ -726,7 +714,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 labelStyle: TextStyle(
                                   fontSize: 18,
                                 ),
-                                // border: OutlineInputBorder(),
+                                border: OutlineInputBorder(),
                               ),
                               textInputAction: TextInputAction.next,
                             );
@@ -737,8 +725,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
                       ),
                       Padding(
-                        padding:
-                            const EdgeInsets.only(left: 8.0, right: 8.0),
+                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                         child: TextFormField(
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -747,8 +734,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             priceController.text =
                                 priceController.text.replaceAll(',', '.');
                             value = priceController.text;
-                            RegExp pattern =
-                                RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
+                            RegExp pattern = RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
                             if (!pattern.hasMatch(value)) {
                               return 'Please insert only numbers';
                             }
@@ -756,6 +742,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           },
                           controller: priceController,
                           decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
                               alignLabelWithHint: true,
                               labelText: 'Price',
                               labelStyle: TextStyle(
@@ -770,25 +757,22 @@ class _MyHomePageState extends State<MyHomePage> {
                           },
                         ),
                       ),
+                      const Padding(padding: EdgeInsets.only(top: 16.0)),
                       Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(8.0, 32.0, 8.0, 8.0),
-                        child: TextFormField(
+                        padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+                        child: TextField(
+                          controller: notesController,
                           minLines: 4,
                           maxLines: 10,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
-                              alignLabelWithHint: true,
-                              labelText: 'Description',
-                              labelStyle: TextStyle(
-                                fontSize: 18,
-                              )
-                              // border: OutlineInputBorder(),
-                              ),
+                            alignLabelWithHint: true,
+                            labelText: 'Description',
+                            labelStyle: TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
                           textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (value) {
-                            // _credit();
-                          },
                         ),
                       ),
                     ],
@@ -826,21 +810,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                          // child: Autocomplete<String>(
-                          //   optionsBuilder:
-                          //       (TextEditingValue textEditingValue) {
-                          //     if (textEditingValue.text == '') {
-                          //       return const Iterable<String>.empty();
-                          //     }
-                          //     return ["ok", "hello"].where((String option) {
-                          //       return option.contains(
-                          //           textEditingValue.text.toLowerCase());
-                          //     });
-                          //   },
-                          //   onSelected: (String selection) {
-                          //     debugPrint('You just selected $selection');
-                          //   },
-                          // ),
                           child: Autocomplete(
                             optionsViewBuilder: (context, onSelected, options) {
                               return Align(
@@ -1014,6 +983,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 title: titleController.text,
                                 timestamp:
                                     DateTime.now().millisecondsSinceEpoch,
+                                notes: notesController.text,
                               );
                               Navigator.of(context).pop(thisItem);
                             }
@@ -1047,5 +1017,92 @@ class _MyHomePageState extends State<MyHomePage> {
                 )
               ],
             ));
+  }
+
+  Future<Item?> openDialogItem(Item a) {
+    // titleController.text = a.note();
+    debugPrint(a.toString());
+    return showGeneralDialog(
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black38,
+      // transitionDuration: Duration(milliseconds: 200),
+      context: context,
+      // barrierDismissible: false,
+      // barrierColor: Colors.black.withOpacity(0.1),
+      transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
+        filter:
+            ImageFilter.blur(sigmaX: 5 * anim1.value, sigmaY: 5 * anim1.value),
+        child: FadeTransition(
+          child: child,
+          opacity: anim1,
+        ),
+      ),
+
+      pageBuilder: (context, anim1, anim2) => AlertDialog(
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await DatabaseRepository.instance
+                  .deleteItem(items[isSelected].id!)
+                  .then((value) => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Transaction deleted !')),
+                      ));
+              setState(() {
+                items = items
+                    .where((item) => item.id != items[isSelected].id)
+                    .toList();
+                isSelected = -1;
+                Navigator.of(context).pop(null);
+              });
+            },
+            child: const Text("Delete",
+                style: TextStyle(
+                  fontSize: 18.0,
+                )),
+          ),
+          // TextButton(
+          //   onPressed: () {},
+          //   child: Text(
+          //     "Modify",
+          //     style: TextStyle(
+          //       fontSize: 18.0,
+          //     ),
+          //   ),
+          // )
+        ],
+        elevation: 10.0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black,
+        // backgroundColor: Colors.amber,
+        title: Text(a.title),
+        content: SizedBox(
+          width: 400,
+          height: 200,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                (a.notes != null) ? a.notes! : "",
+                style: const TextStyle(
+                  fontSize: 18.0,
+                ),
+              ),
+              Align(
+                alignment: Alignment.topRight,
+                child: Text(
+                  a.note(),
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

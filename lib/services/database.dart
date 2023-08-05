@@ -24,7 +24,8 @@ class DatabaseRepository {
     await db.execute('''CREATE TABLE items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT, 
-      price REAL, 
+      price REAL,
+      notes TEXT,
       timestamp INTEGER
     ) ''');
 

@@ -10,6 +10,7 @@ class Item {
   final int? minute;
   final int? month;
   final int? year;
+  final String? notes;
 
   const Item({
     this.id,
@@ -18,6 +19,7 @@ class Item {
     this.minute,
     this.month,
     this.year,
+    this.notes,
     required this.title,
     required this.price,
     required this.timestamp,
@@ -42,6 +44,7 @@ class Item {
       price: map['price'],
       timestamp: map['timestamp'],
       title: map['title'],
+      notes: map['notes'],
       day: d.day,
       month: d.month,
       hour: d.hour,
@@ -50,12 +53,12 @@ class Item {
   }
 
   Map<String, dynamic> toMap() {
-    return {'id': id, 'title': title[0].toUpperCase() + title.substring(1), 'price': price, 'timestamp': timestamp};
+    return {'id': id, 'title': title[0].toUpperCase() + title.substring(1), 'price': price, 'timestamp': timestamp, "notes": notes};
   }
 
   @override
   String toString() {
-    return 'Item(id: $id, title: $title, price: $price, day: $day, month: $month, hour: $hour, minute: $minute)';
+    return 'Item(id: $id, title: $title, price: $price, day: $day, month: $month, hour: $hour, minute: $minute, notes: $notes)';
   }
 
   Future<void> persist() async {
