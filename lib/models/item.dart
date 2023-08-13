@@ -11,6 +11,7 @@ class Item {
   final int? month;
   final int? year;
   final String? notes;
+  final int? paid;
 
   const Item({
     this.id,
@@ -20,6 +21,7 @@ class Item {
     this.month,
     this.year,
     this.notes,
+    this.paid,
     required this.title,
     required this.price,
     required this.timestamp,
@@ -49,16 +51,17 @@ class Item {
       month: d.month,
       hour: d.hour,
       minute: d.minute,
+      paid: map['paid'] ?? 1,
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {'id': id, 'title': title[0].toUpperCase() + title.substring(1), 'price': price, 'timestamp': timestamp, "notes": notes};
+    return {'id': id, 'title': title[0].toUpperCase() + title.substring(1), 'price': price, 'timestamp': timestamp, "notes": notes, "paid": paid};
   }
 
   @override
   String toString() {
-    return 'Item(id: $id, title: $title, price: $price, day: $day, month: $month, hour: $hour, minute: $minute, notes: $notes)';
+    return 'Item(id: $id, title: $title, price: $price, day: $day, month: $month, hour: $hour, minute: $minute, notes: $notes, paid: $paid)';
   }
 
   Future<void> persist() async {
@@ -104,5 +107,9 @@ class Item {
 
   Future<void> delete(id) async {
     await DatabaseRepository.instance.deleteItem(id);
+  }
+
+  Future<void> itemSwitchPaid(isPaid) async {
+    await DatabaseRepository.instance.itemSwitchPaid(id: id!, isPaid: isPaid);
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:walletapp/models/item.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
@@ -17,7 +18,17 @@ class DatabaseRepository {
     // await deleteDatabase("wallet.db");
     final dbPath = await getDatabasesPath();
     final path = p.join(dbPath, filePath);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
+  }
+
+  FutureOr<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    await db.execute('''ALTER TABLE items ADD notes TEXT''');
+    await db.execute('''ALTER TABLE items ADD paid INTEGER''');
   }
 
   Future _createDB(Database db, int version) async {
@@ -26,7 +37,8 @@ class DatabaseRepository {
       title TEXT, 
       price REAL,
       notes TEXT,
-      timestamp INTEGER
+      timestamp INTEGER,
+      paid INTEGER,
     ) ''');
 
     await db.execute('''CREATE TABLE users (
@@ -37,8 +49,21 @@ class DatabaseRepository {
   Future<void> insertItem({required Item item}) async {
     try {
       final db = await instance.database;
+      // print("Inserting item $item");
       await db.insert('items', item.toMap());
       // print('inserted');
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  Future<void> itemSwitchPaid({required int id, required int isPaid}) async {
+    try {
+      final db = await instance.database;
+      // print("Inserting item $item");
+      await db.update('items', {"paid": isPaid},
+          where: 'id = ?', whereArgs: [id]);
+      // print('');
     } catch (e) {
       print(e.toString());
     }
@@ -88,14 +113,20 @@ class DatabaseRepository {
     final db = await instance.database;
 
     final result = await db.query('items');
-
+    print(result);
+    print("OR");
+    print(result.map((json) => Item.fromJson(json)).toList());
     return result.map((json) => Item.fromJson(json)).toList();
   }
 
   Future<void> deleteDB() async {
+    // final items = await getAllItems();
+
     // final dbPath = await getDatabasesPath();
     // final path = p.join(dbPath, 'wallet.db');
-    // databaseFactory.deleteDatabase(path);
-    deleteDatabase('wallet.db');
+    // await databaseFactory.deleteDatabase(path);
+    // await _initDB("wallet.db");
+
+    // deleteDatabase('wallet.db');
   }
 }
