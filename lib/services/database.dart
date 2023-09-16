@@ -27,7 +27,7 @@ class DatabaseRepository {
   }
 
   FutureOr<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    await db.execute('''ALTER TABLE items ADD notes TEXT''');
+    // await db.execute('''ALTER TABLE items ADD notes TEXT''');
     await db.execute('''ALTER TABLE items ADD paid INTEGER''');
   }
 
@@ -38,7 +38,7 @@ class DatabaseRepository {
       price REAL,
       notes TEXT,
       timestamp INTEGER,
-      paid INTEGER,
+      paid INTEGER
     ) ''');
 
     await db.execute('''CREATE TABLE users (
@@ -113,9 +113,9 @@ class DatabaseRepository {
     final db = await instance.database;
 
     final result = await db.query('items');
-    print(result);
-    print("OR");
-    print(result.map((json) => Item.fromJson(json)).toList());
+    // print(result);
+    // print("OR");
+    // print(result.map((json) => Item.fromJson(json)).toList());
     return result.map((json) => Item.fromJson(json)).toList();
   }
 

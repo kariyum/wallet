@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:walletapp/services/database.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:flutter/scheduler.dart';
-import 'dart:ui';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -73,12 +72,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   double totalExpenses() {
-    final res = items.isEmpty
-        ? 0.0
-        : items
-            .where((e) => e.paid == 1)
+    double res = 0.0;
+    if (items.isNotEmpty) {
+      List<Item> filteredItems = items.where((e) => e.paid == 1).toList();
+      if (filteredItems.isNotEmpty) {
+        res = filteredItems
             .map((e) => e.price)
             .reduce((priceA, priceB) => priceA + priceB);
+      }
+    }
+
     return double.parse(
         ((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
   }
@@ -453,9 +456,11 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       leading: Icon(
         Icons.paid,
-        color: items[idx].paid == 1
-            ? const Color.fromARGB(255, 66, 133, 244)
-            : Colors.black54, //Theme.of(context).colorScheme.onSurfaceVariant
+        color: items[idx].isCredit()
+            ? items[idx].paid == 0
+                ? const Color.fromARGB(255, 66, 133, 244)
+                : Colors.black54 //Theme.of(context).colorScheme.onSurfaceVariant
+            : const Color.fromARGB(255, 66, 133, 244),
         size: 26,
       ),
       subtitle: Text(items[idx].note(),
@@ -469,9 +474,9 @@ class _MyHomePageState extends State<MyHomePage> {
           fontSize: 18,
           color: items[idx].paid == 1
               ? items[idx].isCredit()
-                  ? const Color.fromARGB(255, 219, 68, 55)
+                  ? Colors.black54
                   : const Color.fromARGB(255, 15, 157, 88)
-              : Colors.black54,
+              : const Color.fromARGB(255, 219, 68, 55),
         ),
       ),
       title: Flex(
