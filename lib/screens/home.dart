@@ -196,45 +196,38 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget homePageWidget(BuildContext context) {
     return Column(
       children: [
-        TapRegion(
-          onTapInside: (event) {
-            setState(() {
-              currentBalance = !currentBalance;
-            });
-          },
-          child: Column(
-            children: [
-              Container(
-                alignment: Alignment.topLeft,
-                margin: const EdgeInsets.all(8.0),
-                child: Text(
-                  currentBalance ? "Current Balance" : "Future Balance",
-                  // style: TextStyle(
-                  //   fontSize: 24,
-                  //   fontWeight: FontWeight.bold,
-                  // ),
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
+        Column(
+          children: [
+            Container(
+              alignment: Alignment.topLeft,
+              margin: const EdgeInsets.all(8.0),
+              child: Text(
+                currentBalance ? "Current Balance" : "Future Balance",
+                // style: TextStyle(
+                //   fontSize: 24,
+                //   fontWeight: FontWeight.bold,
+                // ),
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
-              Center(
-                child: SizedBox(
-                  height: 130,
-                  child: Center(
-                    child: Text(
-                      // '${totalExpenses().toString()} DT',
-                      currentBalance
-                          ? totalExpenses().toString()
-                          : forecastedExpenses().toString(),
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                      ),
+            ),
+            Center(
+              child: SizedBox(
+                height: 130,
+                child: Center(
+                  child: Text(
+                    // '${totalExpenses().toString()} DT',
+                    currentBalance
+                        ? totalExpenses().toString()
+                        : forecastedExpenses().toString(),
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -822,15 +815,15 @@ class _MyHomePageState extends State<MyHomePage> {
                           textInputAction: TextInputAction.newline,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
-                        child: CustomCheckBox(
-                          onChanged: (bool value) {
-                            isChecked = value;
-                            print("here changing value $isChecked");
-                          },
-                        ),
-                      ),
+                      // Padding(
+                      //   padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+                      //   child: CustomCheckBox(
+                      //     onChanged: (bool value) {
+                      //       isChecked = value;
+                      //       print("here changing value $isChecked");
+                      //     },
+                      //   ),
+                      // ),
                     ],
                   ),
                 )
@@ -868,25 +861,25 @@ class _MyHomePageState extends State<MyHomePage> {
         actionsPadding:
             const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
         actions: [
-          if (a.isCredit())
-            TextButton(
-              onPressed: () async {
-                a
-                    .itemSwitchPaid(a.paid == 1 ? 0 : 1)
-                    .then((value) => ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Transaction updated !')),
-                        ));
-                setState(() {
-                  updateItems();
-                  Navigator.of(context).pop(null);
-                });
-              },
-              child: const Text("Paid",
-                  style: TextStyle(
-                    fontSize: 18,
-                  )),
-            ),
+          // if (a.isCredit())
+          //   TextButton(
+          //     onPressed: () async {
+          //       a
+          //           .itemSwitchPaid(a.paid == 1 ? 0 : 1)
+          //           .then((value) => ScaffoldMessenger.of(context).showSnackBar(
+          //                 const SnackBar(
+          //                     content: Text('Transaction updated !')),
+          //               ));
+          //       setState(() {
+          //         updateItems();
+          //         Navigator.of(context).pop(null);
+          //       });
+          //     },
+          //     child: const Text("Paid",
+          //         style: TextStyle(
+          //           fontSize: 18,
+          //         )),
+          //   ),
           TextButton(
             onPressed: () async {
               await DatabaseRepository.instance

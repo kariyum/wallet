@@ -38,7 +38,7 @@ class DatabaseRepository {
       price REAL,
       notes TEXT,
       timestamp INTEGER,
-      paid INTEGER,
+      paid INTEGER
     ) ''');
 
     await db.execute('''CREATE TABLE users (
