@@ -88,7 +88,7 @@ class Item {
       'December'
     ];
     String s = '';
-    switch (month) {
+    switch (day) {
       case 1:
         s = 'st';
         break;
