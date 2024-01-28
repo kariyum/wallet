@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:walletapp/services/database.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:walletapp/widgets/item_input_dialog.dart';
 import 'dart:ui';
 
 class MyHomePage extends StatefulWidget {
@@ -12,7 +13,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late TextEditingController titleController;
+  late TextEditingController titleController = TextEditingController();
   late TextEditingController priceController;
   late TextEditingController notesController;
   late bool futurePaymentCheckbox;
@@ -79,8 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
             .where((e) => e.paid == 1)
             .map((e) => e.price)
             .reduce((priceA, priceB) => priceA + priceB);
-    return double.parse(
-        ((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
+    return double.parse(((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
   }
 
   double forecastedExpenses() {
@@ -289,88 +289,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   itemBuilder: itemBuilderSimple,
                 ),
               ),
-              // if (isSelected != -1)
-              //   Container(
-              //     padding: const EdgeInsets.only(bottom: 10.0),
-              //     alignment: Alignment.bottomCenter,
-              //     child: TapRegion(
-              //       onTapOutside: (event) {
-              //         setState(() {
-              //           isSelected = -1;
-              //         });
-              //       },
-              //       child: Container(
-              //         height: 70,
-              //         child: Flex(
-              //           direction: Axis.horizontal,
-              //           mainAxisAlignment: MainAxisAlignment.spaceAround,
-              //           crossAxisAlignment: CrossAxisAlignment.stretch,
-              //           children: [
-              //             Flexible(
-              //               fit: FlexFit.tight,
-              //               child: Container(
-              //                 child: ElevatedButton(
-              //                   style: OutlinedButton.styleFrom(
-              //                     shape: CircleBorder(),
-              //                   ),
-              //                   child: const Padding(
-              //                     padding: EdgeInsets.all(12.0),
-              //                     child: Column(
-              //                       children: [
-              //                         Icon(Icons.delete),
-              //                         Text('Delete')
-              //                       ],
-              //                     ),
-              //                   ),
-              //                   onPressed: () async {
-              //                     // debugPrint("DELTED ????");
-              //                     await DatabaseRepository.instance
-              //                         .deleteItem(items[isSelected].id!)
-              //                         .then((value) =>
-              //                             ScaffoldMessenger.of(context)
-              //                                 .showSnackBar(
-              //                               const SnackBar(
-              //                                   content: Text(
-              //                                       'Transaction deleted !')),
-              //                             ));
-              //                     setState(() {
-              //                       items = items
-              //                           .where((item) =>
-              //                               item.id != items[isSelected].id)
-              //                           .toList();
-              //                       isSelected = -1;
-              //                     });
-              //                   },
-              //                 ),
-              //               ),
-              //             ),
-              //             // This is for the EDIT button
-              //             // Flexible(
-              //             //   fit: FlexFit.tight,
-              //             //   child: Container(
-              //             //     child: IconButton(
-              //             //       style: ButtonStyle(
-              //             //         shape: MaterialStateProperty.all<
-              //             //             RoundedRectangleBorder>(
-              //             //           const RoundedRectangleBorder(
-              //             //             borderRadius: BorderRadius.zero,
-              //             //           ),
-              //             //         ),
-              //             //       ),
-              //             //       icon: const Column(
-              //             //         children: [Icon(Icons.edit), Text('Edit')],
-              //             //       ),
-              //             //       onPressed: () {
-
-              //             //       },
-              //             //     ),
-              //             //   ),
-              //             // ),
-              //           ],
-              //         ),
-              //       ),
-              //     ),
-              //   )
             ],
           ),
         ),
@@ -539,24 +457,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isChecked = false;
 
-  void _credit() {
-    if (_formKey.currentState!.validate()) {
-      // If the form is valid, display a snackbar. In the real world,
-      // you'd often call a server or save the information in a database.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction saved !')),
-      );
-      final thisItem = Item(
-        price: 0 - double.parse(priceController.text),
-        title: titleController.text,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
-        notes: notesController.text,
-        paid: isChecked ? 0 : 1,
-      );
-      Navigator.of(context).pop(thisItem);
-    }
-  }
 
+  final _formKey = GlobalKey<FormState>();
+  
   Future<Item?> openFullScreenDialog() {
     titleController.text = '';
     priceController.text = '';
@@ -566,276 +469,16 @@ class _MyHomePageState extends State<MyHomePage> {
     return showGeneralDialog(
       context: context,
       pageBuilder: (context, a, b) => Dialog.fullscreen(
-        child: Scaffold(
-          appBar: AppBar(
-            toolbarHeight: 70.0,
-            title: const Text("New transaction"),
-            leading: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ),
-          bottomNavigationBar: Row(
-            // mainAxisAlignment: MainAxisAlignment.spaceAround,
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            // crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Flexible(
-                fit: FlexFit.tight,
-                child: TextButton(
-                  style: ButtonStyle(
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.zero,
-                      ),
-                    ),
-                  ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Transaction saved !')),
-                      );
-                      final thisItem = Item(
-                        price: double.parse(priceController.text),
-                        title: titleController.text,
-                        timestamp: DateTime.now().millisecondsSinceEpoch,
-                        notes: notesController.text,
-                        paid: 1,
-                      );
-                      // debugPrint(thisItem.toString());
-                      Navigator.of(context).pop(thisItem);
-                    }
-                  },
-                  child: const Text(
-                    "Debit",
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-              ),
-              Flexible(
-                fit: FlexFit.tight,
-                child: TextButton(
-                  style: ButtonStyle(
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.zero,
-                      ),
-                    ),
-                  ),
-                  onPressed: () {
-                    _credit();
-                  },
-                  child: const Text(
-                    "Credit",
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          body: Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
-            child: Column(
-              children: [
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                        // child: Autocomplete<String>(
-                        //   optionsBuilder:
-                        //       (TextEditingValue textEditingValue) {
-                        //     if (textEditingValue.text == '') {
-                        //       return const Iterable<String>.empty();
-                        //     }
-                        //     return ["ok", "hello"].where((String option) {
-                        //       return option.contains(
-                        //           textEditingValue.text.toLowerCase());
-                        //     });
-                        //   },
-                        //   onSelected: (String selection) {
-                        //     debugPrint('You just selected $selection');
-                        //   },
-                        // ),
-                        child: Autocomplete(
-                          optionsViewBuilder: (context, onSelected, options) {
-                            return Align(
-                              alignment: Alignment.topLeft,
-                              child: Material(
-                                elevation: 4.0,
-                                child: ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 285),
-                                  child: ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    itemCount: options.length,
-                                    itemBuilder: (context, index) {
-                                      final option = options.elementAt(index);
-                                      return InkWell(
-                                        onTap: () {
-                                          onSelected(option);
-                                        },
-                                        child: Builder(
-                                            builder: (BuildContext context) {
-                                          final bool highlight =
-                                              AutocompleteHighlightedOption.of(
-                                                      context) ==
-                                                  index;
-                                          if (highlight) {
-                                            SchedulerBinding.instance
-                                                .addPostFrameCallback(
-                                                    (Duration timeStamp) {
-                                              Scrollable.ensureVisible(context,
-                                                  alignment: 0.5);
-                                            });
-                                          }
-                                          return Container(
-                                            color: highlight
-                                                ? Theme.of(context).focusColor
-                                                : null,
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Text(option),
-                                          );
-                                        }),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                          displayStringForOption: (option) => option,
-                          optionsBuilder: (textEditingValue) {
-                            final x = items.map((e) => e.title).toList();
-                            if (textEditingValue.text == '') {
-                              return const Iterable<String>.empty();
-                            } else {
-                              return x.toSet().where((e) => e
-                                  .toLowerCase()
-                                  .startsWith(
-                                      textEditingValue.text.toLowerCase()));
-                            }
-                          },
-                          fieldViewBuilder: (BuildContext context,
-                              TextEditingController fieldTextEditingController,
-                              FocusNode fieldFocusNode,
-                              VoidCallback onFieldSubmitted) {
-                            fieldTextEditingController.addListener(() {
-                              titleController.text =
-                                  fieldTextEditingController.text;
-                            });
-                            return TextFormField(
-                              focusNode: fieldFocusNode,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter some text';
-                                }
-                                titleController.text =
-                                    titleController.text.trim();
-                                return null;
-                              },
-                              textCapitalization: TextCapitalization.sentences,
-                              controller: fieldTextEditingController,
-                              autofocus: true,
-                              decoration: const InputDecoration(
-                                alignLabelWithHint: true,
-                                labelText: 'Item',
-                                labelStyle: TextStyle(
-                                  fontSize: 18,
-                                ),
-                                border: OutlineInputBorder(),
-                              ),
-                              textInputAction: TextInputAction.next,
-                            );
-                          },
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                        child: TextFormField(
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a number';
-                            }
-                            priceController.text =
-                                priceController.text.replaceAll(',', '.');
-                            value = priceController.text;
-                            RegExp pattern = RegExp(r'^[0-9][0-9]*\.?[0-9]*$');
-                            if (!pattern.hasMatch(value)) {
-                              return 'Please insert only numbers';
-                            }
-                            return null;
-                          },
-                          controller: priceController,
-                          decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              alignLabelWithHint: true,
-                              labelText: 'Price',
-                              labelStyle: TextStyle(
-                                fontSize: 18,
-                              )
-                              // border: OutlineInputBorder(),
-                              ),
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (value) {
-                            _credit();
-                          },
-                        ),
-                      ),
-                      const Padding(padding: EdgeInsets.only(top: 16.0)),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
-                        child: TextField(
-                          controller: notesController,
-                          // minLines: 4,
-                          maxLines: null,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            alignLabelWithHint: true,
-                            labelText: 'Description',
-                            labelStyle: TextStyle(
-                              fontSize: 18,
-                            ),
-                          ),
-                          textInputAction: TextInputAction.newline,
-                        ),
-                      ),
-                      // Padding(
-                      //   padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
-                      //   child: CustomCheckBox(
-                      //     onChanged: (bool value) {
-                      //       isChecked = value;
-                      //       print("here changing value $isChecked");
-                      //     },
-                      //   ),
-                      // ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
+        child: ItemInputDialog(
+          formkey: _formKey,
+          notesController: notesController,
+          titleController: titleController,
+          priceController: priceController,
+          items: items,
         ),
       ),
     );
   }
-
-  final _formKey = GlobalKey<FormState>();
 
   Future<Item?> openDialogItem(Item a) {
     // titleController.text = a.note();
@@ -974,59 +617,3 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class CustomCheckBox extends StatefulWidget {
-  final ValueChanged<bool> onChanged;
-
-  const CustomCheckBox({
-    super.key,
-    required this.onChanged,
-  });
-
-  @override
-  State<CustomCheckBox> createState() => CustomCheckBoxState();
-}
-
-class CustomCheckBoxState extends State<CustomCheckBox> {
-  bool isChecked = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12.0),
-      child: Row(
-        children: [
-          SizedBox(
-            height: 18,
-            width: 18,
-            child: Checkbox(
-              value: isChecked,
-              onChanged: (value) => {
-                setState(() {
-                  isChecked = value!;
-                  widget.onChanged(isChecked);
-                })
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: TapRegion(
-              onTapInside: (event) => {
-                setState(() {
-                  isChecked = !isChecked;
-                  widget.onChanged(isChecked);
-                })
-              },
-              child: const Text(
-                "Future payment",
-                style: TextStyle(
-                  fontSize: 18,
-                ),
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-}
