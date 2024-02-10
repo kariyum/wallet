@@ -116,7 +116,7 @@
 
         .left-group {
             display: flex;
-            
+            justify-content: space-between;
         }
     </style>
 </head>
@@ -183,6 +183,15 @@
     </div>
 </body>
 <script>
+    function randomWord() {
+        const n = Math.floor(5 + Math.random()*10)
+        const firstUpperChar = Math.floor(65 + Math.random()*25);
+        const charCodes = Array.apply(null, Array(n)).map(function(x, i) {
+            return Math.floor(97 + Math.random()*25);
+        });
+        return String.fromCharCode(firstUpperChar, ...charCodes);
+
+    }
     function constructPurchaseItem() {
         const iconDiv = document.createElement("div");
         iconDiv.className = "material-symbols-outlined down-arrow"
@@ -190,7 +199,7 @@
         
         const itemDiv = document.createElement("div");
         itemDiv.className = "item-description"
-        itemDiv.innerHTML = "Du pain"
+        itemDiv.innerHTML = randomWord();
         
         const leftDiv = document.createElement("div");
         leftDiv.className = "left-group"

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:walletapp/services/database.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:walletapp/widgets/homepage_upper.dart';
 import 'package:walletapp/widgets/item_input_dialog.dart';
 import 'dart:ui';
 
@@ -80,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
             .where((e) => e.paid == 1)
             .map((e) => e.price)
             .reduce((priceA, priceB) => priceA + priceB);
-    return double.parse(((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
+    return double.parse((res).toStringAsFixed(3));
   }
 
   double forecastedExpenses() {
@@ -157,14 +158,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   int isSelected = -1;
-  // final ScrollController _controller = ScrollController();
-  void _animateToIndex(int index) {
-    _scrollController.animateTo(
-      index * -200,
-      duration: Duration(seconds: 2),
-      curve: Curves.fastOutSlowIn,
-    );
-  }
 
   final ScrollController _scrollController = ScrollController();
   @override
@@ -196,39 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget homePageWidget(BuildContext context) {
     return Column(
       children: [
-        Column(
-          children: [
-            Container(
-              alignment: Alignment.topLeft,
-              margin: const EdgeInsets.all(8.0),
-              child: Text(
-                currentBalance ? "Current Balance" : "Future Balance",
-                // style: TextStyle(
-                //   fontSize: 24,
-                //   fontWeight: FontWeight.bold,
-                // ),
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            ),
-            Center(
-              child: SizedBox(
-                height: 130,
-                child: Center(
-                  child: Text(
-                    // '${totalExpenses().toString()} DT',
-                    currentBalance
-                        ? totalExpenses().toString()
-                        : forecastedExpenses().toString(),
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        HomePageFirstHalf(items: items),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
@@ -297,11 +258,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget? itemBuilderDate(BuildContext context, int idx) {
-    debugPrint((itemsByDate).length.toString());
-    for (int i = 0; i < itemsByDate.length; i++) {
-      final x = itemsByDate[itemsByDate.keys.toList()[i]]![0];
-      debugPrint(itemsByDate[itemsByDate.keys.toList()[i]].toString());
-    }
     return ListView.separated(
       controller: _scrollController,
       separatorBuilder: (BuildContext context, int index) => const Divider(),
@@ -348,15 +304,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget? itemBuilderSimple(BuildContext context, int idx) {
     idx = items.length - idx - 1;
     return ListTile(
-      // shape: Border(),
-
-      // children: [
-      //   TextButton(
-      //     onPressed: (){},
-      //     child: Text("delete"),
-      //   )
-      // ],
-      // selected: isSelected == idx,
       onLongPress: () async {
         isSelected = idx;
         final x = await openDialogItem(items[idx]);
@@ -457,9 +404,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isChecked = false;
 
-
   final _formKey = GlobalKey<FormState>();
-  
+
   Future<Item?> openFullScreenDialog() {
     titleController.text = '';
     priceController.text = '';
@@ -616,4 +562,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
