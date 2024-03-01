@@ -20,20 +20,24 @@ class _HomePageFirstHalfState extends State<HomePageFirstHalf> {
     List<Item> items = widget.items;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    String formatCurrency(double currency) {
+      return "${((currency * 100).toInt() / 100).toString().padLeft(8, ' ')}  ";
+    }
+    
     String totalExpensesFromDate(List<Item> items, DateTime from, DateTime to) {
-      final filteredItems = items.where((item) {
+      final Iterable<double> filteredItems = items.where((item) {
         DateTime itemsDate = DateTime.fromMillisecondsSinceEpoch(item.timestamp);
         DateTime date = DateTime(itemsDate.year, itemsDate.month, itemsDate.day);
         debugPrint(date.toString());
         return !date.isBefore(from) && !date.isAfter(to);
       }).map((item) => item.price);
-      return filteredItems.isEmpty
-          ? '0'.toString().padLeft(8, " ")
+      double amount = filteredItems.isEmpty
+          ? 0
           : filteredItems
-              .reduce((value, element) => value + element)
-              .abs()
-              .toString()
-              .padLeft(8, " ");
+              .fold(0, (previousValue, element) => previousValue + element);
+      // amount = (amount * 100).toInt()/100;
+      // return amount.toString().padLeft(8, ' ');
+      return formatCurrency(amount);
     }
 
     final credits = items.where((item) => item.isCredit()).toList();
@@ -53,7 +57,7 @@ class _HomePageFirstHalfState extends State<HomePageFirstHalf> {
             today.subtract(const Duration(days: 1)), 
             today.subtract(const Duration(days: 1)),)
       ),
-      "This week": (
+      "Last 7 days": (
         totalExpensesFromDate(
             debits,
             today.subtract(Duration(days: today.weekday - 1)),
@@ -63,7 +67,7 @@ class _HomePageFirstHalfState extends State<HomePageFirstHalf> {
             today.subtract(Duration(days: today.weekday - 1)),
             today.add(Duration(days: 7 - today.weekday)))
       ),
-      "This month": (
+      "${today.month}": (
         totalExpensesFromDate(
           debits, 
           DateTime(today.year, today.month), 
@@ -75,10 +79,11 @@ class _HomePageFirstHalfState extends State<HomePageFirstHalf> {
           )
     };
     final configMap = Map.from(config);
-    String totalPrice = items
+    
+    double totalPrice = items
         .map((e) => e.price)
-        .reduce((value, element) => value + element)
-        .toString();
+        .fold(0, (previousValue, element) => previousValue + element);
+    
     return Column(
       children: [
         Container(
@@ -115,12 +120,15 @@ class _HomePageFirstHalfState extends State<HomePageFirstHalf> {
                     "Balance",
                     style: TextStyle(
                       fontSize: 18,
+                      fontWeight: FontWeight.bold
                     ),
                   ),
                   Text(
-                    totalPrice.padLeft(8),
+                    // "${totalPrice.padLeft(8)} DT",
+                    formatCurrency(totalPrice),
                     style: const TextStyle(
                       fontSize: 18,
+                      fontWeight: FontWeight.bold
                     ),
                     textAlign: TextAlign.start,
                   )
@@ -134,7 +142,7 @@ class _HomePageFirstHalfState extends State<HomePageFirstHalf> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    flex: 2,
+                    flex: 1,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -162,10 +170,10 @@ class _HomePageFirstHalfState extends State<HomePageFirstHalf> {
                           var debit = entry.value.$1;
                           var credit = entry.value.$2;
                           return Text(
-                            debit,
+                            debit.trim() != "0.0" ? debit : '',
                             style: const TextStyle(
                               fontSize: 18,
-                              color: Color.fromARGB(255, 21, 128, 64),
+                              color:Color.fromARGB(255, 15, 157, 88),
                             ),
                           );
                         }).toList()
@@ -184,6 +192,7 @@ class _HomePageFirstHalfState extends State<HomePageFirstHalf> {
                             credit,
                             style: const TextStyle(
                               fontSize: 18,
+                              color:Color.fromARGB(255, 219, 68, 55),
                             ),
                           );
                         }).toList()

@@ -190,67 +190,63 @@ class _MyHomePageState extends State<MyHomePage> {
     return Column(
       children: [
         HomePageFirstHalf(items: items),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Container(
-              margin: const EdgeInsets.all(8.0),
-              child: Text(
-                "Transactions",
-                style: Theme.of(context).textTheme.titleLarge,
-                // style: TextStyle(
-                //   fontSize: 18,
-                //   fontWeight: FontWeight.bold,
-                // ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(right: 8.0),
-              child: IconButton(
-                onPressed: () async {
-                  // Navigator.of(context)
-                  //     .push(MaterialPageRoute<void>(
-                  //   builder: (context) => openDialog(),
-                  // ));
-                  // openDialog();
-                  // final x = await openDialog2();
-                  final x = await openFullScreenDialog();
-                  if (x == null) {
-                    debugPrint(x.toString());
-                  } else {
-                    setState(() {
-                      x.persist();
-                      updateItems();
-                    });
-                  }
-                },
-                icon: const Icon(Icons.add),
-              ),
-            )
-          ],
-        ),
-        Flexible(
-          child: Stack(
-            children: [
+        SingleChildScrollView(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
               Container(
-                color: Theme.of(context).colorScheme.background,
-                child: ListView.separated(
-                  controller: _scrollController,
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const Divider(),
-                  // reverse: true,
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  // padding: EdgeInsets.all(16.0),
-                  // itemCount: flattened.length,
-                  // itemBuilder: (context, i) {
-                  //   return flattened[i];
-                  // },
-                  itemCount: items.length,
-                  itemBuilder: itemBuilderSimple,
+                margin: const EdgeInsets.all(8.0),
+                child: Text(
+                  "Transactions",
+                  style: Theme.of(context).textTheme.titleLarge,
+                  // style: TextStyle(
+                  //   fontSize: 18,
+                  //   fontWeight: FontWeight.bold,
+                  // ),
                 ),
               ),
+              Container(
+                margin: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  onPressed: () async {
+                    // Navigator.of(context)
+                    //     .push(MaterialPageRoute<void>(
+                    //   builder: (context) => openDialog(),
+                    // ));
+                    // openDialog();
+                    // final x = await openDialog2();
+                    final x = await openFullScreenDialog();
+                    if (x == null) {
+                      debugPrint(x.toString());
+                    } else {
+                      setState(() {
+                        x.persist();
+                        updateItems();
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.add),
+                ),
+              )
             ],
+          ),
+        ),
+        Flexible(
+          child: ListView.separated(
+            controller: _scrollController,
+            separatorBuilder: (BuildContext context, int index) =>
+                const Divider(),
+            // reverse: true,
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            physics: ClampingScrollPhysics(),
+            // padding: EdgeInsets.all(16.0),
+            // itemCount: flattened.length,
+            // itemBuilder: (context, i) {
+            //   return flattened[i];
+            // },
+            itemCount: items.length,
+            itemBuilder: itemBuilderSimple,
           ),
         ),
       ],
