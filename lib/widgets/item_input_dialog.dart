@@ -7,21 +7,19 @@ class ItemInputDialog extends StatefulWidget {
   final List<Item> items;
   final TextEditingController titleController, priceController, notesController;
   const ItemInputDialog({
-      super.key,
-      required this.formkey,
-      required this.notesController,
-      required this.titleController,
-      required this.priceController,
-      required this.items,
-      }
-    );
+    super.key,
+    required this.formkey,
+    required this.notesController,
+    required this.titleController,
+    required this.priceController,
+    required this.items,
+  });
 
   @override
   State<ItemInputDialog> createState() => _ItemInputDialogState();
 }
 
 class _ItemInputDialogState extends State<ItemInputDialog> {
-  
   @override
   Widget build(BuildContext context) {
     GlobalKey<FormState> formKey = widget.formkey;
@@ -46,104 +44,114 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         // crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          debitButton(titleController, priceController, notesController, formKey), 
-          creditButton(formKey, priceController, titleController, notesController)
-          ],
+          debitButton(
+              titleController, priceController, notesController, formKey),
+          creditButton(
+              formKey, priceController, titleController, notesController)
+        ],
       ),
-      body: dialogBody(formKey, items, titleController, priceController, notesController),
+      body: dialogBody(
+          formKey, items, titleController, priceController, notesController),
     );
   }
 
-  Widget itemInputTitle(List<Item> items, TextEditingController titleController) {
+  Widget itemInputTitle(
+      List<Item> items, TextEditingController titleController) {
     return Padding(
       padding: const EdgeInsets.only(left: 7.0, right: 8.0),
-      child: Autocomplete(
-        optionsViewBuilder: (context, onSelected, options) {
-          return Align(
-            alignment: Alignment.topLeft,
-            child: Material(
-              elevation: 3.0,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 284),
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  itemCount: options.length,
-                  itemBuilder: (context, index) {
-                    final option = options.elementAt(index);
-                    return InkWell(
-                      onTap: () {
-                        onSelected(option);
-                      },
-                      child: Builder(builder: (BuildContext context) {
-                        final bool highlight =
-                            AutocompleteHighlightedOption.of(context) == index;
-                        if (highlight) {
-                          SchedulerBinding.instance
-                              .addPostFrameCallback((Duration timeStamp) {
-                            Scrollable.ensureVisible(context, alignment: -1.5);
-                          });
-                        }
-                        return Container(
-                          color:
-                              highlight ? Theme.of(context).focusColor : null,
-                          padding: const EdgeInsets.all(15.0),
-                          child: Text(option),
-                        );
-                      }),
-                    );
-                  },
+      child: LayoutBuilder(
+        builder: (_, BoxConstraints constraints) => Autocomplete(
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 3.0,
+                child: ConstrainedBox(
+                  constraints: constraints,
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final option = options.elementAt(index);
+                      return InkWell(
+                        onTap: () {
+                          onSelected(option);
+                        },
+                        child: Builder(builder: (BuildContext context) {
+                          final bool highlight =
+                              AutocompleteHighlightedOption.of(context) == index;
+                          if (highlight) {
+                            SchedulerBinding.instance
+                                .addPostFrameCallback((Duration timeStamp) {
+                              Scrollable.ensureVisible(context, alignment: -1.5);
+                            });
+                          }
+                          return Container(
+                            color:
+                                highlight ? Theme.of(context).focusColor : null,
+                            padding: const EdgeInsets.all(15.0),
+                            child: Text(option),
+                          );
+                        }),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-        displayStringForOption: (option) => option,
-        optionsBuilder: (textEditingValue) {
-          final x = items.map((e) => e.title).toList();
-          if (textEditingValue.text == '') {
-            return const Iterable<String>.empty();
-          } else {
-            return x.toSet().where((e) => e
-                .toLowerCase()
-                .startsWith(textEditingValue.text.toLowerCase()));
-          }
-        },
-        fieldViewBuilder: (BuildContext context,
-            TextEditingController fieldTextEditingController,
-            FocusNode fieldFocusNode,
-            VoidCallback onFieldSubmitted) {
-          fieldTextEditingController.addListener(() {
-            titleController.text = fieldTextEditingController.text;
-          });
-          return TextFormField(
-            focusNode: fieldFocusNode,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              titleController.text = titleController.text.trim();
-              return null;
-            },
-            textCapitalization: TextCapitalization.sentences,
-            controller: fieldTextEditingController,
-            autofocus: true,
-            decoration: const InputDecoration(
-              alignLabelWithHint: true,
-              labelText: 'Item',
-              labelStyle: TextStyle(
-                fontSize: 17,
+            );
+          },
+          displayStringForOption: (option) => option,
+          optionsBuilder: (textEditingValue) {
+            final x = items.map((e) => e.title).toList();
+            if (textEditingValue.text == '') {
+              return const Iterable<String>.empty();
+            } else {
+              return x.toSet().where((e) => e
+                  .toLowerCase()
+                  .startsWith(textEditingValue.text.toLowerCase()));
+            }
+          },
+          fieldViewBuilder: (BuildContext context,
+              TextEditingController fieldTextEditingController,
+              FocusNode fieldFocusNode,
+              VoidCallback onFieldSubmitted) {
+            fieldTextEditingController.addListener(() {
+              titleController.text = fieldTextEditingController.text;
+            });
+            return TextFormField(
+              focusNode: fieldFocusNode,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter some text';
+                }
+                titleController.text = titleController.text.trim();
+                return null;
+              },
+              textCapitalization: TextCapitalization.sentences,
+              controller: fieldTextEditingController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                alignLabelWithHint: true,
+                labelText: 'Item',
+                labelStyle: TextStyle(
+                  fontSize: 17,
+                ),
+                border: OutlineInputBorder(),
               ),
-              border: OutlineInputBorder(),
-            ),
-            textInputAction: TextInputAction.next,
-          );
-        },
+              textInputAction: TextInputAction.next,
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget priceInputField(GlobalKey<FormState> formKey, TextEditingController priceController, TextEditingController titleController, TextEditingController notesController){
+  Widget priceInputField(
+      GlobalKey<FormState> formKey,
+      TextEditingController priceController,
+      TextEditingController titleController,
+      TextEditingController notesController) {
     return Padding(
       padding: const EdgeInsets.only(left: 8.0, right: 8.0),
       child: TextFormField(
@@ -199,7 +207,12 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     );
   }
 
-  Widget dialogBody(GlobalKey<FormState> formKey, List<Item> items, TextEditingController titleController, TextEditingController priceController, TextEditingController notesController){
+  Widget dialogBody(
+      GlobalKey<FormState> formKey,
+      List<Item> items,
+      TextEditingController titleController,
+      TextEditingController priceController,
+      TextEditingController notesController) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
       child: Column(
@@ -211,7 +224,8 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
               children: [
                 itemInputTitle(items, titleController),
                 const Padding(padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0)),
-                priceInputField(formKey, priceController, titleController, notesController),
+                priceInputField(
+                    formKey, priceController, titleController, notesController),
                 const Padding(padding: EdgeInsets.only(top: 16.0)),
                 textArea(notesController),
                 // Padding(
@@ -231,7 +245,11 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     );
   }
 
-  Widget debitButton(TextEditingController titleController, TextEditingController priceController, TextEditingController notesController, GlobalKey<FormState> formKey) {
+  Widget debitButton(
+      TextEditingController titleController,
+      TextEditingController priceController,
+      TextEditingController notesController,
+      GlobalKey<FormState> formKey) {
     return Flexible(
       fit: FlexFit.tight,
       child: TextButton(
@@ -268,8 +286,11 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     );
   }
 
-  
-  Widget creditButton(GlobalKey<FormState> formKey, TextEditingController priceController, TextEditingController titleController, TextEditingController notesController ) {
+  Widget creditButton(
+      GlobalKey<FormState> formKey,
+      TextEditingController priceController,
+      TextEditingController titleController,
+      TextEditingController notesController) {
     return Flexible(
       fit: FlexFit.tight,
       child: TextButton(
@@ -293,7 +314,11 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     );
   }
 
-  void _credit(GlobalKey<FormState> formKey, TextEditingController priceController, TextEditingController titleController, TextEditingController notesController) {
+  void _credit(
+      GlobalKey<FormState> formKey,
+      TextEditingController priceController,
+      TextEditingController titleController,
+      TextEditingController notesController) {
     if (formKey.currentState!.validate()) {
       // If the form is valid, display a snackbar. In the real world,
       // you'd often call a server or save the information in a database.
