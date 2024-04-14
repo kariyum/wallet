@@ -1,10 +1,21 @@
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:walletapp/models/datetime.dart';
+import 'package:walletapp/screens/analytics.dart';
+import 'package:walletapp/screens/stats.dart';
 import 'package:walletapp/services/database.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:walletapp/widgets/homepage_upper.dart';
 import 'package:walletapp/widgets/item_input_dialog.dart';
+import 'package:walletapp/widgets/navigation_bar.dart';
 import 'dart:ui';
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:walletapp/screens/stats.dart' as test;
+import 'package:walletapp/widgets/reactive_floating_action_buttion.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -25,7 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     initDb();
     super.initState();
-    skipLockScreen();
+    // skipLockScreen();
     updateItems();
     titleController = TextEditingController();
     titleController.text = '';
@@ -40,10 +51,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void skipLockScreen() async {
     final lpin = await DatabaseRepository.instance.readPin();
     _islocked = lpin.isEmpty ? true : lpin[0] != "-1";
-    // setState(() {
-    //   debugPrint("IS LOCKED $_islocked");
-    //   debugPrint("LPIN[0] ${lpin[0]}");
-    // });
   }
 
   void initDb() async {
@@ -60,16 +67,17 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  Future<List<Item>> getAllItmes() async {
+  Future<List<Item>> getAllItems() async {
     return await DatabaseRepository.instance.getAllItems();
   }
 
   List<Item> items = [];
+  Map<DateTime, List<Item>> itemsByDate = {};
   void updateItems() async {
     await DatabaseRepository.instance.getAllItems().then((value) {
       setState(() {
         items = value;
-        // groupItemsByDate();
+        itemsByDate = value.groupedByDay();
       });
     }).catchError((e) => debugPrint(e.toString()));
   }
@@ -95,210 +103,388 @@ class _MyHomePageState extends State<MyHomePage> {
         ((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
   }
 
-  Map<String, List<Item>> itemsByDate = {};
-  List<Widget> flattened = [];
-  void groupItemsByDate() {
-    // updateItems();
-    for (int i = 0; i < items.length; i++) {
-      Item itm = items[i];
-      String mapKey = '${itm.day}/${itm.month}/${itm.year}';
-
-      if (!itemsByDate.containsKey(mapKey)) {
-        itemsByDate[mapKey] = <Item>[itm];
-      } else {
-        itemsByDate[mapKey]!.add(itm);
-      }
-      // debugPrint(itemsByDate.toString());
-    }
-    flattenItemsByDate();
-  }
-
-  void flattenItemsByDate() {
-    List<Widget> res = <Widget>[];
-    for (final entry in itemsByDate.entries) {
-      res.add(Text('${entry.key} category'));
-      res.add(Container(
-        padding: EdgeInsets.zero,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24.0),
-          color: Theme.of(context).colorScheme.background,
-        ),
-        child: Column(
-          children: [
-            for (final value in entry.value)
-              ListTile(
-                title: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      value.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                      ),
-                    ),
-                    Text(
-                      '${value.price.toString()} DT',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: value.isCredit()
-                            ? const Color.fromARGB(255, 219, 68, 55)
-                            : const Color.fromARGB(255, 15, 157, 88),
-                      ),
-                    )
-                  ],
-                ),
-              )
-          ],
-        ),
-      ));
-    }
-    flattened = res;
-  }
-
   int isSelected = -1;
 
   final ScrollController _scrollController = ScrollController();
+
+  int _currentPageIndex = 0;
+
   @override
   Widget build(BuildContext context) {
-    debugPrint("rebuilding");
-    // if (_islocked == false) {
-    //   WidgetsBinding.instance.addPostFrameCallback((_) =>
-    //       _scrollController.jumpTo(_scrollController.position.maxScrollExtent));
-    // }
-
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context)
-            .colorScheme
-            .surface, //Theme.of(context).colorScheme.primaryContainer,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          systemNavigationBarColor: Colors.transparent,
+          // systemNavigationBarDividerColor: ElevationOverlay.applySurfaceTint(Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceTint, 3.0)
+        ),
+        // backgroundColor: Theme.of(context).colorScheme.primary,
+        elevation: Theme.of(context).appBarTheme.elevation,
         primary: true,
-        toolbarHeight: 10,
-        scrolledUnderElevation: 0.0,
-        // title: const Center(
-        //   child: Text("Wallet"),
-        // ),
+        // toolbarHeight: 0,
+        // scrolledUnderElevation: 0.0,
+        backgroundColor: AppBarTheme.of(context).backgroundColor,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.account_balance_rounded,
+              size: 50,
+              color: Colors.amber[400],
+            ),
+            const VerticalDivider(),
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Welcome!",
+                  style: TextStyle(
+                      fontSize: 14, color: Color.fromARGB(255, 117, 117, 117)),
+                ),
+                Text(
+                  "Overview",
+                )
+              ],
+            ),
+          ],
+        ),
       ),
-      body: _islocked ? showLockScreen() : homePageWidget(context),
+      body: [
+        homePageWidget(context),
+        AnalyticsPage(itemsByDate: items.groupedByDay()),
+        Text("Page 3"),
+      ][_currentPageIndex],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentPageIndex,
+        onDestinationSelected: (int index) {
+          setState(() {
+            _currentPageIndex = index;
+          });
+        },
+        destinations: const <Widget>[
+          NavigationDestination(
+            selectedIcon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            selectedIcon: Icon(Icons.query_stats),
+            icon: Icon(Icons
+                .query_stats_outlined), //Badge( label: Text('2'), child: Icon(Icons.query_stats), ),
+            label: 'Stats',
+          ),
+          // NavigationDestination(
+          //   icon: Badge(
+          //     child: Icon(Icons.notifications_sharp),
+          //   ),
+          //   label: 'Notifications',
+          // ),
+        ],
+      ),
+      floatingActionButton: ReactiveFloatingActionButton(
+        controller: _scrollController,
+        onPressed: () async {
+          final x = await openFullScreenDialog();
+          if (x == null) {
+            debugPrint(x.toString());
+          } else {
+            setState(() {
+              x.persist();
+              updateItems();
+            });
+          }
+        },
+        currentPageIndex: _currentPageIndex,
+        visibleOnPageIndex: 0,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
   bool currentBalance = true;
 
   Widget homePageWidget(BuildContext context) {
-    return Column(
-      children: [
-        HomePageFirstHalf(items: items),
-        SingleChildScrollView(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Container(
-                margin: const EdgeInsets.all(8.0),
-                child: Text(
-                  "Transactions",
-                  style: Theme.of(context).textTheme.titleLarge,
-                  // style: TextStyle(
-                  //   fontSize: 18,
-                  //   fontWeight: FontWeight.bold,
-                  // ),
+    return SingleChildScrollView(
+      controller: _scrollController,
+      child: ListView(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        children: [
+          Card(
+            margin: const EdgeInsets.all(8),
+            child: SizedBox(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          "${items.availableBalance().format()} DNT",
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Text(
+                      "Available Balance",
+                      style: TextStyle(
+                        fontSize: 14,
+                      ),
+                    ),
+                    const Divider(),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.red[100],
+                          maxRadius: 16,
+                          child: Icon(
+                            Icons.arrow_downward_rounded,
+                            color: Colors.red[600],
+                          ),
+                        ),
+                        const VerticalDivider(),
+                        Text(
+                          "${items.totalCredit().format()} DNT",
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.green[100],
+                          maxRadius: 16,
+                          child: Icon(
+                            Icons.arrow_upward_rounded,
+                            color: Colors.green[600],
+                          ),
+                        ),
+                        const VerticalDivider(),
+                        Text(
+                          "${items.totalDebit().format()} DNT",
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              Container(
-                margin: const EdgeInsets.only(right: 8.0),
-                child: IconButton(
-                  onPressed: () async {
-                    // Navigator.of(context)
-                    //     .push(MaterialPageRoute<void>(
-                    //   builder: (context) => openDialog(),
-                    // ));
-                    // openDialog();
-                    // final x = await openDialog2();
-                    final x = await openFullScreenDialog();
-                    if (x == null) {
-                      debugPrint(x.toString());
-                    } else {
-                      setState(() {
-                        x.persist();
-                        updateItems();
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.add),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      "Transactions",
+                      style: TextStyle(fontSize: 21),
+                    ),
+                  ),
                 ),
-              )
+                ListView.separated(
+                  // controller: _scrollController,
+                  separatorBuilder: (BuildContext context, int index) =>
+                      const SizedBox(
+                    height: 20,
+                  ),
+                  // reverse: true,
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: itemsByDate.keys.length,
+                  itemBuilder: itemBuilderByDate,
+                ),
+              ],
+            ),
+          ),
+
+          // Divider(
+          //   indent: 40,
+          //   endIndent: 40,
+          // ),
+          // ListView.separated(
+          //   // controller: _scrollController,
+          //   separatorBuilder: (BuildContext context, int index) =>
+          //       const Divider(),
+          //   // reverse: true,
+          //   scrollDirection: Axis.vertical,
+          //   shrinkWrap: true,
+          //   physics: NeverScrollableScrollPhysics(),
+          //   itemCount: items.length,
+          //   itemBuilder: itemBuilderSimple,
+          // ),
+          // ListView.builder(itemBuilder: itemBuilderDate, itemCount: itemsByDate.length,)
+        ],
+      ),
+    );
+  }
+
+  Widget? itemBuilderByDateSub(
+      BuildContext context, int idx, List<Item> items) {
+    final currentItem = items.elementAt(idx);
+    return Dismissible(
+      key: Key(currentItem.id.toString()),
+      onDismissed: (direction) {
+        if (direction == DismissDirection.endToStart) {
+          // DatabaseRepository.instance.deleteItem()
+        }
+      },
+      secondaryBackground: Container(
+        color: Colors.red[400],
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                "Delete",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(
+                width: 20,
+              ),
+              Icon(
+                Icons.delete,
+                color: Colors.white,
+              ),
             ],
           ),
         ),
-        Flexible(
-          child: ListView.separated(
-            controller: _scrollController,
-            separatorBuilder: (BuildContext context, int index) =>
-                const Divider(),
-            // reverse: true,
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            physics: ClampingScrollPhysics(),
-            // padding: EdgeInsets.all(16.0),
-            // itemCount: flattened.length,
-            // itemBuilder: (context, i) {
-            //   return flattened[i];
-            // },
-            itemCount: items.length,
-            itemBuilder: itemBuilderSimple,
+      ),
+      background: Container(
+        color: Colors.green[400],
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Icon(
+                Icons.edit,
+                color: Colors.white,
+              ),
+              SizedBox(
+                width: 20,
+              ),
+              Text(
+                "Edit",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
         ),
+      ),
+      confirmDismiss: (direction) async {
+        return false; // direction == DismissDirection.endToStart;
+      },
+      child: ListTile(
+        onLongPress: () async {
+          isSelected = idx;
+          final x = await openDialogItem(items[idx]);
+          isSelected = -1;
+        },
+        leading: Icon(
+          Icons.wallet,
+          color: currentItem.paid == 1
+              ? const Color.fromARGB(255, 66, 133, 244)
+              : Colors.black54, //Theme.of(context).colorScheme.onSurfaceVariant
+          size: 26,
+        ),
+        subtitle: Text("${currentItem.hour!}:${currentItem.minute!}",
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            )),
+        trailing: Text(
+          '${currentItem.price.format()} DNT',
+          style: TextStyle(
+            fontSize: 18,
+            color: currentItem.paid == 1
+                ? currentItem.isCredit()
+                    ? const Color.fromARGB(255, 219, 68, 55)
+                    : const Color.fromARGB(255, 15, 157, 88)
+                : Colors.black54,
+          ),
+        ),
+        title: Text(
+          currentItem.title,
+          style: TextStyle(
+            fontSize: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget? itemBuilderByDate(BuildContext context, int idx) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              itemsByDate.keys.elementAt(idx).formatListTile(),
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
+        ),
+        Divider(
+          indent: 10,
+          endIndent: 10,
+        ),
+        ListView.builder(
+          // separatorBuilder: (context, index) => Divider(
+          //  indent: 20,
+          //  endIndent: 20,
+          //  height: 0,
+          // ),
+          itemCount: itemsByDate.values.elementAt(idx).length,
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemBuilder: (context, j) {
+            return itemBuilderByDateSub(
+                context, j, itemsByDate.values.elementAt(idx));
+          },
+        ),
+        // for (var elementIndex = 0;
+        //     elementIndex < itemsByDate.values.elementAt(idx).length;
+        //     elementIndex += 1)
+        //   ListTile(
+        //     title: Text(itemsByDate.values
+        //         .elementAt(idx)
+        //         .elementAt(elementIndex)
+        //         .title),
+        //   )
       ],
     );
   }
 
-  Widget? itemBuilderDate(BuildContext context, int idx) {
-    return ListView.separated(
-      controller: _scrollController,
-      separatorBuilder: (BuildContext context, int index) => const Divider(),
-      padding: const EdgeInsets.all(8.0),
-      reverse: true,
-      scrollDirection: Axis.vertical,
-      shrinkWrap: true,
-      itemCount: itemsByDate.keys.toList()[idx].length,
-      itemBuilder: (_, i) {
-        return ListTile(
-          leading: Icon(
-            itemsByDate[itemsByDate.keys.toList()[idx]]![i].isCredit()
-                ? Icons.shopping_bag
-                : Icons.paid,
-            color: Colors.blue[300],
-          ),
-          title: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                itemsByDate[itemsByDate.keys.toList()[idx]]![i].title,
-                style: const TextStyle(
-                  fontSize: 18,
-                ),
-              ),
-              Text(
-                '${itemsByDate[itemsByDate.keys.toList()[idx]]![i].price.toString()} DT',
-                style: TextStyle(
-                  fontSize: 18,
-                  color:
-                      itemsByDate[itemsByDate.keys.toList()[idx]]![i].isCredit()
-                          ? const Color.fromARGB(255, 219, 68, 55)
-                          : const Color.fromARGB(255, 15, 157, 88),
-                ),
-              )
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget? itemBuilderSimple(BuildContext context, int idx) {
-    idx = items.length - idx - 1;
+    // idx = items.length - idx - 1;
     return ListTile(
       onLongPress: () async {
         isSelected = idx;
@@ -318,7 +504,7 @@ class _MyHomePageState extends State<MyHomePage> {
             color: Colors.grey[600],
           )),
       trailing: Text(
-        '${items[idx].price.toString()} DT',
+        '${items[idx].price.format()} DNT',
         style: TextStyle(
           fontSize: 18,
           color: items[idx].paid == 1
@@ -346,56 +532,56 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool _islocked = true;
   Widget showLockScreen() {
-    return WillPopScope(
-        child: Scaffold(
-          appBar: AppBar(),
-          body: Column(
-            children: [
-              const Text("Welcome"),
-              const Text("Enter your PIN please"),
-              Center(
-                child: SizedBox(
-                  width: 300,
-                  child: TextFormField(
-                    onFieldSubmitted: (value) async {
-                      // await DatabaseRepository.instance.deletePin();
-                      // debugPrint("Deleting pin");
-                      final x = await DatabaseRepository.instance.readPin();
-                      if (x.isEmpty) {
-                        value = value.isEmpty ? "-1" : value;
-                        await DatabaseRepository.instance.insertPin(pin: value);
-                        // final xx = await DatabaseRepository.instance.readPin();
-                        // debugPrint(xx.toString());
+    return PopScope(
+      child: Scaffold(
+        appBar: AppBar(),
+        body: Column(
+          children: [
+            const Text("Welcome"),
+            const Text("Enter your PIN please"),
+            Center(
+              child: SizedBox(
+                width: 300,
+                child: TextFormField(
+                  onFieldSubmitted: (value) async {
+                    // await DatabaseRepository.instance.deletePin();
+                    // debugPrint("Deleting pin");
+                    final x = await DatabaseRepository.instance.readPin();
+                    if (x.isEmpty) {
+                      value = value.isEmpty ? "-1" : value;
+                      await DatabaseRepository.instance.insertPin(pin: value);
+                      // final xx = await DatabaseRepository.instance.readPin();
+                      // debugPrint(xx.toString());
+                      setState(() {
+                        _islocked = false;
+                      });
+                    } else {
+                      if (x[0].toString() == value) {
                         setState(() {
                           _islocked = false;
                         });
-                      } else {
-                        if (x[0].toString() == value) {
-                          setState(() {
-                            _islocked = false;
-                          });
-                        }
                       }
-                    },
-                    textAlign: TextAlign.center,
-                    obscureText: true,
-                    enableSuggestions: false,
-                    autocorrect: false,
-                    autofocus: true,
-                    style: const TextStyle(
-                      fontSize: 22,
-                    ),
-                    decoration: const InputDecoration(
-                      hintText: 'PIN',
-                    ),
-                    keyboardType: TextInputType.number,
+                    }
+                  },
+                  textAlign: TextAlign.center,
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  autofocus: true,
+                  style: const TextStyle(
+                    fontSize: 22,
                   ),
+                  decoration: const InputDecoration(
+                    hintText: 'PIN',
+                  ),
+                  keyboardType: TextInputType.number,
                 ),
-              )
-            ],
-          ),
+              ),
+            )
+          ],
         ),
-        onWillPop: () => Future.value(true));
+      ),
+    );
   }
 
   bool isChecked = false;
@@ -423,13 +609,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<Item?> openDialogItem(Item a) {
-    // titleController.text = a.note();
-    debugPrint(a.toString());
     return showGeneralDialog(
       barrierDismissible: true,
       barrierLabel: '',
-      barrierColor: Colors.black38,
-      // transitionDuration: Duration(milliseconds: 200),
+      // barrierColor: Colors.black38,
+      transitionDuration: Durations.short4,
       context: context,
       // barrierDismissible: false,
       // barrierColor: Colors.black.withOpacity(0.1),
@@ -446,25 +630,6 @@ class _MyHomePageState extends State<MyHomePage> {
         actionsPadding:
             const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
         actions: [
-          // if (a.isCredit())
-          //   TextButton(
-          //     onPressed: () async {
-          //       a
-          //           .itemSwitchPaid(a.paid == 1 ? 0 : 1)
-          //           .then((value) => ScaffoldMessenger.of(context).showSnackBar(
-          //                 const SnackBar(
-          //                     content: Text('Transaction updated !')),
-          //               ));
-          //       setState(() {
-          //         updateItems();
-          //         Navigator.of(context).pop(null);
-          //       });
-          //     },
-          //     child: const Text("Paid",
-          //         style: TextStyle(
-          //           fontSize: 18,
-          //         )),
-          //   ),
           TextButton(
             onPressed: () async {
               await DatabaseRepository.instance
@@ -476,6 +641,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 items = items
                     .where((item) => item.id != items[isSelected].id)
                     .toList();
+                itemsByDate = items.groupedByDay();
                 isSelected = -1;
                 Navigator.of(context).pop(null);
               });

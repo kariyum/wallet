@@ -103,19 +103,23 @@ class DatabaseRepository {
 
   Future<List<String>> readPin() async {
     final db = await instance.database;
-
     final result = await db.query('users');
-
     return result.map((json) => json['pin'].toString()).toList();
   }
 
   Future<List<Item>> getAllItems() async {
+    final stopwatch = Stopwatch()..start();
+    print("started at ");
     final db = await instance.database;
 
-    final result = await db.query('items');
-    print(result);
-    print("OR");
-    print(result.map((json) => Item.fromJson(json)).toList());
+    final result = await db.query('items', orderBy: 'timestamp DESC');
+
+    stopwatch.stop();
+    final milliseconds = stopwatch.elapsedMilliseconds;
+
+    print('Future took $milliseconds milliseconds to complete.');
+
+    // print(result.map((json) => Item.fromJson(json)).toList());
     return result.map((json) => Item.fromJson(json)).toList();
   }
 
