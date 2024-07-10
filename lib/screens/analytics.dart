@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:walletapp/models/item.dart';
-import 'package:walletapp/screens/stats.dart';
+import 'package:walletapp/widgets/stats.dart';
 import 'package:walletapp/services/utils.dart';
 
 class AnalyticsPage extends StatefulWidget {
@@ -67,7 +67,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 itemBuilder: (context, index) {
                   final date = widget.itemsByMonth.keys.elementAt(index);
                   final localItems = widget.itemsByMonth[date]!;
-                  final itemsByCategory = localItems.groupedByCategory();
+                  final itemsByCategory = localItems.groupedByCategoryAndSorted();
                   final allDates = localItems
                       .map((item) =>
                           DateTime.fromMillisecondsSinceEpoch(item.timestamp))
@@ -87,11 +87,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                               child: Text(
                                 "${fromDate} - ${endDate} ${getMonth(date.$2)}",
                                 style: TextStyle(
-                                    fontSize: 24, fontWeight: FontWeight.bold),
+                                    fontSize: 24, fontWeight: FontWeight.bold
+                                ),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.fromLTRB(16.0, 0, 16, 0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
@@ -114,7 +115,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                             )
                           ],
                         ),
-                        Divider(
+                        const Divider(
+                          height: 0,
                           indent: 15,
                           endIndent: 15,
                         ),
@@ -124,10 +126,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           physics: NeverScrollableScrollPhysics(),
                           itemCount: itemsByCategory.length,
                           itemBuilder: (context, index) {
-                            final category =
-                                itemsByCategory.keys.elementAt(index);
-                            final items = itemsByCategory[category]!;
-                            final total = items.availableBalance();
+                            final category = itemsByCategory.elementAt(index).key;
+                            final total = itemsByCategory.elementAt(index).value;
                             return Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Row(

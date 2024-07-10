@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:walletapp/models/datetime.dart';
 import 'package:walletapp/screens/analytics.dart';
-import 'package:walletapp/screens/stats.dart';
+import 'package:walletapp/widgets/stats.dart';
 import 'package:walletapp/services/database.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:flutter/scheduler.dart';
@@ -14,7 +16,7 @@ import 'package:walletapp/widgets/item_input_dialog.dart';
 import 'package:walletapp/widgets/navigation_bar.dart';
 import 'dart:ui';
 import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:walletapp/screens/stats.dart' as test;
+import 'package:walletapp/widgets/stats.dart' as test;
 import 'package:walletapp/widgets/reactive_floating_action_buttion.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -28,6 +30,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController titleController = TextEditingController();
   late TextEditingController priceController;
   late TextEditingController notesController;
+  late TextEditingController dateController = TextEditingController();
   late bool futurePaymentCheckbox;
 
   bool isDialogOpen = false;
@@ -73,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<Item> items = [];
   Map<DateTime, List<Item>> itemsByDate = {};
+
   void updateItems() async {
     await DatabaseRepository.instance.getAllItems().then((value) {
       setState(() {
@@ -128,21 +132,67 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Icon(
-              Icons.account_balance_rounded,
-              size: 50,
+              [Icons.account_balance_rounded, Icons.query_stats].elementAt(_currentPageIndex),
+              size: 40,
               color: Colors.amber[400],
             ),
+            // TextButton(
+            //   onPressed: () async {
+            //     // inserts 13 months of data
+            //     // 5 items per day
+            //     int numberOfMonths = 13;
+            //     int numberOfItemsPerMonth = 5;
+            //
+            //     Random r = Random();
+            //     int currentDate = DateTime.now().millisecond;
+            //     DateTime.now().add(Duration(days: -9));
+            //     List<String> titles = [
+            //       "Milk",
+            //       "Chocolate",
+            //       "Water",
+            //       "Coffee",
+            //       "Electricity",
+            //       "Mouse",
+            //       "Needs",
+            //       "Burger"
+            //     ];
+            //     List<Future<void>> futures = [];
+            //     const monthInMillis = 30 * 24 * 60 * 60 * 1000;
+            //     for (int month = 0; month < numberOfMonths; month++) {
+            //       int monthTimestamp = currentDate - monthInMillis * month;
+            //       for (int itemNumber = 0;
+            //           itemNumber < numberOfItemsPerMonth;
+            //           itemNumber++) {
+            //         String randomTitle =
+            //             titles.elementAt(r.nextInt(titles.length - 1));
+            //         int sign = r.nextBool() ? 1 : -1;
+            //         double price = sign * r.nextDouble() * 100;
+            //         int randomDays = r.nextInt(28) * 24 * 60 * 60 * 1000;
+            //         Item item = Item(
+            //             title: randomTitle,
+            //             price: price,
+            //             timestamp: monthTimestamp + randomDays);
+            //         futures.add(item.persist());
+            //       }
+            //     }
+            //     Future.wait(futures);
+            //     setState(() {
+            //       updateItems();
+            //     });
+            //   },
+            //   child: Text("Generate data"),
+            // ),
             const VerticalDivider(),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   "Welcome!",
                   style: TextStyle(
                       fontSize: 14, color: Color.fromARGB(255, 117, 117, 117)),
                 ),
                 Text(
-                  "Overview",
+                  ["Overview", "Statistics", "Page3"].elementAt(_currentPageIndex),
                 )
               ],
             ),
@@ -169,8 +219,8 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           NavigationDestination(
             selectedIcon: Icon(Icons.query_stats),
-            icon: Icon(Icons
-                .query_stats_outlined), //Badge( label: Text('2'), child: Icon(Icons.query_stats), ),
+            icon: Icon(Icons.query_stats_outlined),
+            //Badge( label: Text('2'), child: Icon(Icons.query_stats), ),
             label: 'Stats',
           ),
           // NavigationDestination(
@@ -412,7 +462,7 @@ class _MyHomePageState extends State<MyHomePage> {
               : Colors.black54, //Theme.of(context).colorScheme.onSurfaceVariant
           size: 26,
         ),
-        subtitle: Text("${currentItem.hour!}:${currentItem.minute!}",
+        subtitle: Text("${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],
@@ -443,17 +493,15 @@ class _MyHomePageState extends State<MyHomePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              itemsByDate.keys.elementAt(idx).formatListTile(),
-              style: TextStyle(fontSize: 18),
-            ),
+          padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+          child: Text(
+            itemsByDate.keys.elementAt(idx).formatListTile(),
+            style: TextStyle(fontSize: 18),
           ),
         ),
         Divider(
-          indent: 10,
+          height: 4,
+          indent: 14,
           endIndent: 10,
         ),
         ListView.builder(
@@ -531,6 +579,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   bool _islocked = true;
+
   Widget showLockScreen() {
     return PopScope(
       child: Scaffold(
@@ -588,12 +637,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  Future<Item?> openFullScreenDialog() {
+  Future<Item?> openFullScreenDialog({Item? defaultItem }) {
     titleController.text = '';
     priceController.text = '';
     notesController.text = '';
+    dateController.text = '';
     isChecked = false;
-
     return showGeneralDialog(
       context: context,
       pageBuilder: (context, a, b) => Dialog.fullscreen(
@@ -602,7 +651,9 @@ class _MyHomePageState extends State<MyHomePage> {
           notesController: notesController,
           titleController: titleController,
           priceController: priceController,
+          dateController: dateController,
           items: items,
+          defaultItem: defaultItem,
         ),
       ),
     );
@@ -616,15 +667,15 @@ class _MyHomePageState extends State<MyHomePage> {
       transitionDuration: Durations.short4,
       context: context,
       // barrierDismissible: false,
-      // barrierColor: Colors.black.withOpacity(0.1),
-      // transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
-      //   filter:
-      //       ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
-      //   child: FadeTransition(
-      //     opacity: anim1,
-      //     child: child,
-      //   ),
-      // ),
+      barrierColor: Colors.black.withOpacity(0.1),
+      transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
+        filter:
+            ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
+        child: FadeTransition(
+          opacity: anim1,
+          child: child,
+        ),
+      ),
       pageBuilder: (context, anim1, anim2) => AlertDialog(
         // actionsAlignment: MainAxisAlignment.spaceBetween,
         actionsPadding:
@@ -633,14 +684,12 @@ class _MyHomePageState extends State<MyHomePage> {
           TextButton(
             onPressed: () async {
               await DatabaseRepository.instance
-                  .deleteItem(items[isSelected].id!)
+                  .deleteItem(a.id!)
                   .then((value) => ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Transaction deleted !')),
                       ));
               setState(() {
-                items = items
-                    .where((item) => item.id != items[isSelected].id)
-                    .toList();
+                items = items.where((item) => item.id != a.id).toList();
                 itemsByDate = items.groupedByDay();
                 isSelected = -1;
                 Navigator.of(context).pop(null);
@@ -651,15 +700,25 @@ class _MyHomePageState extends State<MyHomePage> {
                   fontSize: 18.0,
                 )),
           ),
-          // TextButton(
-          //   onPressed: () {},
-          //   child: Text(
-          //     "Modify",
-          //     style: TextStyle(
-          //       fontSize: 18.0,
-          //     ),
-          //   ),
-          // )
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop(null);
+              final itemToInsert = await openFullScreenDialog(defaultItem: a);
+              if (itemToInsert != null) {
+                await itemToInsert.persist();
+                setState(() {
+                  updateItems();
+                });
+              }
+              return;
+            },
+            child: Text(
+              "Modify",
+              style: TextStyle(
+                fontSize: 18.0,
+              ),
+            ),
+          )
         ],
         elevation: 10.0,
         surfaceTintColor: Colors.transparent,
@@ -677,7 +736,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Column(
               children: [
                 Text(
-                  a.price.toString(),
+                  a.price.format(),
                   style: TextStyle(
                     fontSize: 21,
                     color: a.isCredit()
@@ -697,6 +756,12 @@ class _MyHomePageState extends State<MyHomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text(
+                a.formatDate(),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+              ),
               if (a.notes != null && a.notes! != "")
                 Flexible(
                   fit: FlexFit.loose,
@@ -705,6 +770,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     style: const TextStyle(
                       fontSize: 18.0,
                     ),
+                  ),
+                )
+              else
+                const Text(
+                  "No description is available.",
+                  style: TextStyle(
+                    color: Colors.grey
                   ),
                 ),
               // Align(

@@ -50,7 +50,11 @@ class DatabaseRepository {
     try {
       final db = await instance.database;
       // print("Inserting item $item");
-      await db.insert('items', item.toMap());
+      if (item.id == null) {
+        await db.insert('items', item.toMap());
+      } else {
+        await db.update('items', item.toMapUpdate(), where: 'id = ?', whereArgs: [item.id]);
+      }
       // print('inserted');
     } catch (e) {
       print(e.toString());

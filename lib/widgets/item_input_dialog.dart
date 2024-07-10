@@ -1,17 +1,27 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:walletapp/models/item.dart';
 
+import 'custom_checkbox.dart';
+
 class ItemInputDialog extends StatefulWidget {
   final GlobalKey<FormState> formkey;
   final List<Item> items;
-  final TextEditingController titleController, priceController, notesController;
+  final TextEditingController titleController,
+      priceController,
+      notesController,
+      dateController;
+  final Item? defaultItem;
+
   const ItemInputDialog({
     super.key,
+    this.defaultItem,
     required this.formkey,
     required this.notesController,
     required this.titleController,
     required this.priceController,
+    required this.dateController,
     required this.items,
   });
 
@@ -20,14 +30,23 @@ class ItemInputDialog extends StatefulWidget {
 }
 
 class _ItemInputDialogState extends State<ItemInputDialog> {
+  DateTime? pickedDate;
+  TimeOfDay? pickedTime;
+
   @override
   Widget build(BuildContext context) {
     GlobalKey<FormState> formKey = widget.formkey;
     TextEditingController titleController = widget.titleController;
     TextEditingController priceController = widget.priceController;
     TextEditingController notesController = widget.notesController;
+    TextEditingController dateController = widget.dateController;
     List<Item> items = widget.items;
-
+    final Item? item = widget.defaultItem;
+    if (item != null) {
+      titleController.text = item.title;
+      priceController.text = item.price.abs().toString();
+      notesController.text = item.notes != null ? item.notes! : "";
+    }
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70.0,
@@ -50,8 +69,8 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
               formKey, priceController, titleController, notesController)
         ],
       ),
-      body: dialogBody(
-          formKey, items, titleController, priceController, notesController),
+      body: dialogBody(formKey, items, titleController, priceController,
+          notesController, dateController),
     );
   }
 
@@ -80,11 +99,13 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                         },
                         child: Builder(builder: (BuildContext context) {
                           final bool highlight =
-                              AutocompleteHighlightedOption.of(context) == index;
+                              AutocompleteHighlightedOption.of(context) ==
+                                  index;
                           if (highlight) {
                             SchedulerBinding.instance
                                 .addPostFrameCallback((Duration timeStamp) {
-                              Scrollable.ensureVisible(context, alignment: -1.5);
+                              Scrollable.ensureVisible(context,
+                                  alignment: -1.5);
                             });
                           }
                           return Container(
@@ -119,6 +140,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
             fieldTextEditingController.addListener(() {
               titleController.text = fieldTextEditingController.text;
             });
+            fieldTextEditingController.text = titleController.text;
             return TextFormField(
               focusNode: fieldFocusNode,
               validator: (value) {
@@ -130,7 +152,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
               },
               textCapitalization: TextCapitalization.sentences,
               controller: fieldTextEditingController,
-              autofocus: true,
+              // autofocus: true,
               decoration: const InputDecoration(
                 alignLabelWithHint: true,
                 labelText: 'Item',
@@ -207,12 +229,43 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     );
   }
 
+  Future<DateTime?> _selectDate(BuildContext context) async {
+    final pickedDate = showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2015, 8),
+        lastDate: DateTime(2101));
+    return pickedDate;
+  }
+
+  Future<TimeOfDay?> _selectTime(BuildContext context) async {
+    final pickedTime = showTimePicker(
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child ?? Container(),
+        );
+      },
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    return pickedTime;
+  }
+
   Widget dialogBody(
       GlobalKey<FormState> formKey,
       List<Item> items,
       TextEditingController titleController,
       TextEditingController priceController,
-      TextEditingController notesController) {
+      TextEditingController notesController,
+      TextEditingController dateController) {
+    final DateTime? defaultDateTime = widget.defaultItem != null ? DateTime.fromMillisecondsSinceEpoch(widget.defaultItem!.timestamp): null;
+    final DateTime dateTime = defaultDateTime ?? DateTime.now();
+    TextEditingController timeController = TextEditingController(
+        text: "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}"
+    );
+
+    dateController.text = "${dateTime.year}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.day.toString().padLeft(2, '0')}";
     return Padding(
       padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
       child: Column(
@@ -228,21 +281,131 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                     formKey, priceController, titleController, notesController),
                 const Padding(padding: EdgeInsets.only(top: 16.0)),
                 textArea(notesController),
-                // Padding(
-                //   padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
-                //   child: CustomCheckBox(
-                //     onChanged: (bool value) {
-                //       isChecked = value;
-                //       print("here changing value $isChecked");
-                //     },
-                //   ),
-                // ),
+                // TimePickerDialog(initialTime: TimeOfDay(hour: 1, minute: 1)),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
+                        child: TextField(
+                          controller: dateController,
+                          onTap: () async {
+                            selectDateField(dateController);
+                          },
+                          canRequestFocus: false,
+                          decoration: InputDecoration(
+                            alignLabelWithHint: true,
+                            labelText: 'Date',
+                            labelStyle: const TextStyle(
+                              fontSize: 17,
+                            ),
+                            suffixIcon: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.date_range,
+                                ),
+                                onPressed: () async {
+                                  selectDateField(dateController);
+                                },
+                              ),
+                            ),
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
+                        child: TextField(
+                          controller: timeController,
+                          onTap: () async {
+                            selectTimeField(timeController);
+                          },
+                          canRequestFocus: false,
+                          decoration: InputDecoration(
+                            alignLabelWithHint: true,
+                            labelText: 'Time',
+                            labelStyle: const TextStyle(
+                              fontSize: 17,
+                            ),
+                            suffixIcon: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.access_time_outlined,
+                                ),
+                                onPressed: () async {
+                                  selectTimeField(timeController);
+                                },
+                              ),
+                            ),
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+                  child: CustomCheckBox(
+                    onChanged: (bool value) {
+                      var isChecked = value;
+                      print("here changing value $isChecked");
+                    },
+                  ),
+                ),
               ],
             ),
           )
         ],
       ),
     );
+  }
+
+  void selectDateField(TextEditingController dateController) async {
+    final selectedDate = await _selectDate(context);
+    pickedDate = selectedDate;
+    if (pickedDate != null) {
+      dateController.text =
+          "${pickedDate!.year}/${pickedDate!.month.toString().padLeft(2, '0')}/${pickedDate!.day.toString().padLeft(2, '0')}";
+    }
+  }
+
+  void selectTimeField(TextEditingController timeController) async {
+    final selectedTime = await _selectTime(context);
+    pickedTime = selectedTime;
+    if (pickedTime != null) {
+      timeController.text =
+          "${pickedTime!.hour.toString().padLeft(2, '0')}:${pickedTime!.minute.toString().padLeft(2, '0')}";
+    }
+  }
+
+  DateTime getDate() {
+    DateTime date = DateTime.now();
+    if (pickedDate != null) {
+      date = date.copyWith(
+          year: pickedDate!.year,
+          month: pickedDate!.month,
+          day: pickedDate!.day);
+    } else if (widget.defaultItem != null) {
+      final defaultDate =
+          DateTime.fromMillisecondsSinceEpoch(widget.defaultItem!.timestamp);
+      date = date.copyWith(
+          year: defaultDate.year,
+          month: defaultDate.month,
+          day: defaultDate.day);
+    }
+    if (pickedTime != null) {
+      date = date.copyWith(hour: pickedTime!.hour, minute: pickedTime!.minute);
+    } else if (widget.defaultItem != null) {
+      final defaultDate =
+          DateTime.fromMillisecondsSinceEpoch(widget.defaultItem!.timestamp);
+      date = date.copyWith(hour: defaultDate.hour, minute: defaultDate.minute);
+    }
+    return date;
   }
 
   Widget debitButton(
@@ -266,9 +429,10 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
               const SnackBar(content: Text('Transaction saved !')),
             );
             final thisItem = Item(
+              id: widget.defaultItem?.id,
               price: double.parse(priceController.text),
               title: titleController.text,
-              timestamp: DateTime.now().millisecondsSinceEpoch,
+              timestamp: getDate().millisecondsSinceEpoch,
               notes: notesController.text,
               paid: 1,
             );
@@ -326,10 +490,12 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
         const SnackBar(content: Text('Transaction saved !')),
       );
       final thisItem = Item(
+        id: widget.defaultItem?.id,
         price: 0 - double.parse(priceController.text),
         title: titleController.text,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
+        timestamp: getDate().millisecondsSinceEpoch,
         notes: notesController.text,
+        paid: 0,
       );
       Navigator.of(context).pop(thisItem);
     }
