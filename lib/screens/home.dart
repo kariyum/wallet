@@ -87,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   double totalExpenses() {
+    debugPrint("TOTAL EXPENSES");
     final res = items.isEmpty
         ? 0.0
         : items
@@ -132,7 +133,8 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Icon(
-              [Icons.account_balance_rounded, Icons.query_stats].elementAt(_currentPageIndex),
+              [Icons.account_balance_rounded, Icons.query_stats]
+                  .elementAt(_currentPageIndex),
               size: 40,
               color: Colors.amber[400],
             ),
@@ -192,7 +194,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       fontSize: 14, color: Color.fromARGB(255, 117, 117, 117)),
                 ),
                 Text(
-                  ["Overview", "Statistics", "Page3"].elementAt(_currentPageIndex),
+                  ["Overview", "Statistics", "Page3"]
+                      .elementAt(_currentPageIndex),
                 )
               ],
             ),
@@ -238,10 +241,8 @@ class _MyHomePageState extends State<MyHomePage> {
           if (x == null) {
             debugPrint(x.toString());
           } else {
-            setState(() {
-              x.persist();
-              updateItems();
-            });
+            await x.persist();
+            updateItems();
           }
         },
         currentPageIndex: _currentPageIndex,
@@ -462,7 +463,8 @@ class _MyHomePageState extends State<MyHomePage> {
               : Colors.black54, //Theme.of(context).colorScheme.onSurfaceVariant
           size: 26,
         ),
-        subtitle: Text("${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
+        subtitle: Text(
+            "${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],
@@ -637,7 +639,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  Future<Item?> openFullScreenDialog({Item? defaultItem }) {
+  Future<Item?> openFullScreenDialog({Item? defaultItem}) {
     titleController.text = '';
     priceController.text = '';
     notesController.text = '';
@@ -683,6 +685,23 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: [
           TextButton(
             onPressed: () async {
+              Navigator.of(context).pop(null);
+              if (a.isCredit()) {
+                await a.itemSwitchPaid().then((value) {
+                  updateItems();
+                });
+              }
+              return;
+            },
+            child: const Text(
+              "Paid",
+              style: TextStyle(
+                fontSize: 18.0,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
               await DatabaseRepository.instance
                   .deleteItem(a.id!)
                   .then((value) => ScaffoldMessenger.of(context).showSnackBar(
@@ -713,12 +732,12 @@ class _MyHomePageState extends State<MyHomePage> {
               return;
             },
             child: Text(
-              "Modify",
+              "Edit",
               style: TextStyle(
                 fontSize: 18.0,
               ),
             ),
-          )
+          ),
         ],
         elevation: 10.0,
         surfaceTintColor: Colors.transparent,
@@ -775,9 +794,7 @@ class _MyHomePageState extends State<MyHomePage> {
               else
                 const Text(
                   "No description is available.",
-                  style: TextStyle(
-                    color: Colors.grey
-                  ),
+                  style: TextStyle(color: Colors.grey),
                 ),
               // Align(
               //   alignment: Alignment.bottomLeft,

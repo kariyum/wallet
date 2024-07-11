@@ -114,8 +114,8 @@ class Item {
     await DatabaseRepository.instance.deleteItem(id);
   }
 
-  Future<void> itemSwitchPaid(isPaid) async {
-    await DatabaseRepository.instance.itemSwitchPaid(id: id!, isPaid: isPaid);
+  Future<void> itemSwitchPaid() async {
+    await DatabaseRepository.instance.itemSwitchPaid(id: id!, isPaid: (paid ?? 1) == 0 ? 1 : 0);
   }
 
   String formatDate() {
@@ -135,11 +135,13 @@ extension Transactions on List<Item> {
   }
 
   double availableBalance() {
-    return fold(0, (acc, item) => acc + item.price);
+    return
+      where((item) => item.paid == 1)
+      .fold(0, (acc, item) => acc + item.price);
   }
 
   double totalCredit() {
-    return where((item) => item.price < 0)
+    return where((item) => item.price < 0 && item.paid == 1)
         .fold(0, (previousValue, element) => previousValue + element.price);
   }
 

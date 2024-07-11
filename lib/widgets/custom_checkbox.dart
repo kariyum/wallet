@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 class CustomCheckBox extends StatefulWidget {
   final ValueChanged<bool> onChanged;
-
+  final int? defaultValue;
   const CustomCheckBox({
     super.key,
     required this.onChanged,
+    required this.defaultValue,
   });
 
   @override
@@ -13,7 +14,12 @@ class CustomCheckBox extends StatefulWidget {
 
 class CustomCheckBoxState extends State<CustomCheckBox> {
   bool isChecked = false;
-
+  @override
+  void initState() {
+    super.initState();
+    int defaultCheck = widget.defaultValue ?? 1;
+    isChecked = defaultCheck == 1 ? false : true;
+  }
   @override
   Widget build(BuildContext context) {
     return Padding(

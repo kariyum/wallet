@@ -32,6 +32,7 @@ class ItemInputDialog extends StatefulWidget {
 class _ItemInputDialogState extends State<ItemInputDialog> {
   DateTime? pickedDate;
   TimeOfDay? pickedTime;
+  bool isPaid = true;
 
   @override
   Widget build(BuildContext context) {
@@ -351,9 +352,9 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
                   child: CustomCheckBox(
+                    defaultValue: widget.defaultItem?.paid,
                     onChanged: (bool value) {
-                      var isChecked = value;
-                      print("here changing value $isChecked");
+                      isPaid = !value;
                     },
                   ),
                 ),
@@ -454,7 +455,8 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
       GlobalKey<FormState> formKey,
       TextEditingController priceController,
       TextEditingController titleController,
-      TextEditingController notesController) {
+      TextEditingController notesController
+      ) {
     return Flexible(
       fit: FlexFit.tight,
       child: TextButton(
@@ -495,8 +497,9 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
         title: titleController.text,
         timestamp: getDate().millisecondsSinceEpoch,
         notes: notesController.text,
-        paid: 0,
+        paid: isPaid ? 1 : 0,
       );
+      debugPrint("writing this item ${thisItem}");
       Navigator.of(context).pop(thisItem);
     }
   }
