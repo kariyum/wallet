@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:math';
 
 import 'package:walletapp/services/database.dart';
@@ -57,6 +58,16 @@ class Item {
     };
   }
 
+  Map<String, dynamic> toMapUpdate() {
+    return {
+      'title': title[0].toUpperCase() + title.substring(1),
+      'price': price,
+      'timestamp': timestamp,
+      "notes": notes,
+      "paid": paid
+    };
+  }
+
   @override
   String toString() {
     return 'Item(id: $id, title: $title, price: $price, day: $day, month: $month, hour: $hour, minute: $minute, notes: $notes, paid: $paid)';
@@ -103,8 +114,8 @@ class Item {
     await DatabaseRepository.instance.deleteItem(id);
   }
 
-  Future<void> itemSwitchPaid(isPaid) async {
-    await DatabaseRepository.instance.itemSwitchPaid(id: id!, isPaid: isPaid);
+  Future<void> itemSwitchPaid() async {
+    await DatabaseRepository.instance.itemSwitchPaid(id: id!, isPaid: (paid ?? 1) == 0 ? 1 : 0);
   }
 
   String formatDate() {
@@ -124,11 +135,13 @@ extension Transactions on List<Item> {
   }
 
   double availableBalance() {
-    return fold(0, (acc, item) => acc + item.price);
+    return
+      where((item) => item.paid == 1)
+      .fold(0, (acc, item) => acc + item.price);
   }
 
   double totalCredit() {
-    return where((item) => item.price < 0)
+    return where((item) => item.price < 0 && item.paid == 1)
         .fold(0, (previousValue, element) => previousValue + element.price);
   }
 
@@ -138,16 +151,11 @@ extension Transactions on List<Item> {
   }
 
   Map<DateTime, List<Item>> groupedByDay() {
-    // h(DateTime date) => "${date.}"
-    f(date) => "${date.year} - ${date.month} - ${date.day}";
-    g(str) => DateTime.parse(str);
     DateTime reset(int timestamp) {
-      final remainder = timestamp % 86400000;
-      return DateTime.fromMillisecondsSinceEpoch(timestamp - remainder);
+      final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      return DateTime(date.year, date.month, date.day);
+
     }
-    final remainder = DateTime.now().millisecondsSinceEpoch % 86400000;
-    print("Remainder is $remainder");
-    print(DateTime.fromMillisecondsSinceEpoch(DateTime.now().millisecondsSinceEpoch - remainder).toIso8601String());
     return fold(
         {},
         (map, item) => map
@@ -172,6 +180,23 @@ extension Transactions on List<Item> {
       result.putIfAbsent(item.title, () => <Item>[]).add(item);
     }
     return result;
+  }
+
+  List<MapEntry<String, double>> groupedByCategoryAndSorted() {
+    Map<String, List<Item>> itemsByCategory = groupedByCategory();
+    Map<String, double> categoryToSum = itemsByCategory.map((key, value) {
+      var c = value.map((e) => e.price);
+      var sum = c.fold(0.0, (previousValue, element) => previousValue + element);
+      return MapEntry(key, sum);
+    });
+    List<MapEntry<String, double>> categoriesList = categoryToSum
+        .entries
+        .toList();
+    List<MapEntry<String, double>> credits = categoriesList.where((element) => element.value < 0).toList();
+    List<MapEntry<String, double>> debits = categoriesList.where((element) => element.value >= 0).toList();
+    credits.sort((a, b) => a.value.compareTo(b.value));
+    debits.sort((a, b) => b.value.compareTo(a.value));
+    return credits + debits;
   }
 }
 // class YearMonth{
