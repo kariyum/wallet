@@ -91,9 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
   double forecastedExpenses() {
     final res = items.isEmpty
         ? 0.0
-        : items
-            .map((e) => e.price)
-            .reduce((priceA, priceB) => priceA + priceB);
+        : items.map((e) => e.price).reduce((priceA, priceB) => priceA + priceB);
     return double.parse(
         ((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
   }
@@ -299,12 +297,20 @@ class _MyHomePageState extends State<MyHomePage> {
                         )
                       ],
                     ),
-                    const Text(
-                      "Available Balance",
-                      style: TextStyle(
-                        fontSize: 14,
+                    if (showCurrentBalance)
+                      const Text(
+                        "Available Balance",
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      )
+                    else
+                      const Text(
+                        "Forecasted Balance",
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
                     const Divider(),
                     Row(
                       children: [

@@ -32,14 +32,14 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+              const Padding(
+                padding: EdgeInsets.only(left: 16.0, top: 16.0),
                 child: Text(
                   "Overall expenses",
                   style: TextStyle(fontSize: 21),
                 ),
               ),
-              Container(
+              SizedBox(
                 height: 200,
                 child: Padding(
                   padding: const EdgeInsets.all(18.0),
@@ -52,11 +52,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+              const Padding(
+                padding: EdgeInsets.only(left: 16.0, top: 16.0),
                 child: Text(
                   "Monthly expenses",
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 21),
                 ),
               ),
               ListView.builder(

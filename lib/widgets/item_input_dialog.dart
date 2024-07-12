@@ -271,7 +271,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
         text: "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}"
     );
 
-    dateController.text = "${dateTime.year}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.day.toString().padLeft(2, '0')}";
+    dateController.text = "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}";
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
@@ -386,7 +386,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     pickedDate = selectedDate;
     if (pickedDate != null) {
       dateController.text =
-          "${pickedDate!.year}/${pickedDate!.month.toString().padLeft(2, '0')}/${pickedDate!.day.toString().padLeft(2, '0')}";
+          "${pickedDate!.day.toString().padLeft(2, '0')}/${pickedDate!.month.toString().padLeft(2, '0')}/${pickedDate!.year}";
     }
   }
 
