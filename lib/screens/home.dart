@@ -1,22 +1,13 @@
-import 'dart:math';
+import 'dart:ui';
 
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:walletapp/models/datetime.dart';
-import 'package:walletapp/screens/analytics.dart';
-import 'package:walletapp/widgets/stats.dart';
-import 'package:walletapp/services/database.dart';
 import 'package:walletapp/models/item.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:walletapp/widgets/homepage_upper.dart';
+import 'package:walletapp/screens/analytics.dart';
+import 'package:walletapp/services/database.dart';
 import 'package:walletapp/widgets/item_input_dialog.dart';
-import 'package:walletapp/widgets/navigation_bar.dart';
-import 'dart:ui';
-import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:walletapp/widgets/stats.dart' as test;
 import 'package:walletapp/widgets/reactive_floating_action_buttion.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -101,7 +92,6 @@ class _MyHomePageState extends State<MyHomePage> {
     final res = items.isEmpty
         ? 0.0
         : items
-            // .where((e) => e.paid == 1)
             .map((e) => e.price)
             .reduce((priceA, priceB) => priceA + priceB);
     return double.parse(
@@ -252,14 +242,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  bool currentBalance = true;
+  bool showCurrentBalance = true;
+  bool showCardInfo = false;
 
   Widget homePageWidget(BuildContext context) {
     return SingleChildScrollView(
       controller: _scrollController,
       child: ListView(
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         children: [
           Card(
             margin: const EdgeInsets.all(8),
@@ -270,14 +261,42 @@ class _MyHomePageState extends State<MyHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          "${items.availableBalance().format()} DNT",
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        TapRegion(
+                          onTapInside: (event) {
+                            setState(() {
+                              showCurrentBalance = !showCurrentBalance;
+                            });
+                            return;
+                          },
+                          child: Text(
+                            () {
+                              if (showCardInfo && showCurrentBalance) {
+                                return "${items.availableBalance().format()} DNT";
+                              }
+                              if (showCardInfo && !showCurrentBalance) {
+                                return "${forecastedExpenses().format()} DNT";
+                              }
+                              return "---";
+                            }(),
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
+                        TapRegion(
+                          onTapInside: (event) {
+                            setState(() {
+                              showCardInfo = !showCardInfo;
+                            });
+                            return;
+                          },
+                          child: showCardInfo
+                              ? const Icon(Icons.visibility)
+                              : const Icon(Icons.visibility_off),
+                        )
                       ],
                     ),
                     const Text(
@@ -299,7 +318,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         const VerticalDivider(),
                         Text(
-                          "${items.totalCredit().format()} DNT",
+                          showCardInfo
+                              ? "${items.totalCredit().format()} DNT"
+                              : "---",
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -322,7 +343,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         const VerticalDivider(),
                         Text(
-                          "${items.totalDebit().format()} DNT",
+                          showCardInfo
+                              ? "${items.totalDebit().format()} DNT"
+                              : "---",
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -390,104 +413,151 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget? itemBuilderByDateSub(
       BuildContext context, int idx, List<Item> items) {
     final currentItem = items.elementAt(idx);
-    return Dismissible(
-      key: Key(currentItem.id.toString()),
-      onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart) {
-          // DatabaseRepository.instance.deleteItem()
-        }
+    return ListTile(
+      onLongPress: () async {
+        isSelected = idx;
+        final x = await openDialogItem(items[idx]);
+        isSelected = -1;
       },
-      secondaryBackground: Container(
-        color: Colors.red[400],
-        child: const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                "Delete",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(
-                width: 20,
-              ),
-              Icon(
-                Icons.delete,
-                color: Colors.white,
-              ),
-            ],
-          ),
+      leading: Icon(
+        Icons.wallet,
+        color: () {
+          if (currentItem.isCredit() && currentItem.paid == 1) {
+            return Colors.black54;
+          }
+          return const Color.fromARGB(255, 66, 133, 244);
+        }(), //Theme.of(context).colorScheme.onSurfaceVariant
+        size: 26,
+      ),
+      subtitle: Text(
+          "${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+          )),
+      trailing: Text(
+        '${currentItem.price.format()} DNT',
+        style: TextStyle(
+          fontSize: 18,
+          color: () {
+            const red = Color.fromARGB(255, 219, 68, 55);
+            const green = Color.fromARGB(255, 15, 157, 88);
+            const black = Colors.black54;
+            if (currentItem.isCredit() && currentItem.paid == 1) {
+              return black;
+            }
+            return currentItem.isCredit() ? red : green;
+          }(),
         ),
       ),
-      background: Container(
-        color: Colors.green[400],
-        child: const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Icon(
-                Icons.edit,
-                color: Colors.white,
-              ),
-              SizedBox(
-                width: 20,
-              ),
-              Text(
-                "Edit",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 21,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        return false; // direction == DismissDirection.endToStart;
-      },
-      child: ListTile(
-        onLongPress: () async {
-          isSelected = idx;
-          final x = await openDialogItem(items[idx]);
-          isSelected = -1;
-        },
-        leading: Icon(
-          Icons.wallet,
-          color: currentItem.paid == 1
-              ? const Color.fromARGB(255, 66, 133, 244)
-              : Colors.black54, //Theme.of(context).colorScheme.onSurfaceVariant
-          size: 26,
-        ),
-        subtitle: Text(
-            "${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            )),
-        trailing: Text(
-          '${currentItem.price.format()} DNT',
-          style: TextStyle(
-            fontSize: 18,
-            color: currentItem.paid == 1
-                ? currentItem.isCredit()
-                    ? const Color.fromARGB(255, 219, 68, 55)
-                    : const Color.fromARGB(255, 15, 157, 88)
-                : Colors.black54,
-          ),
-        ),
-        title: Text(
-          currentItem.title,
-          style: TextStyle(
-            fontSize: 18,
-          ),
+      title: Text(
+        currentItem.title,
+        style: const TextStyle(
+          fontSize: 18,
         ),
       ),
     );
+    // Dismissible(
+    //   key: Key(currentItem.id.toString()),
+    // onDismissed: (direction) {
+    //   if (direction == DismissDirection.endToStart) {
+    //     // DatabaseRepository.instance.deleteItem()
+    //   }
+    // },
+    // secondaryBackground: Container(
+    //   color: Colors.red[400],
+    //   child: const Padding(
+    //     padding: EdgeInsets.all(16.0),
+    //     child: Row(
+    //       mainAxisAlignment: MainAxisAlignment.end,
+    //       children: [
+    //         Text(
+    //           "Delete",
+    //           style: TextStyle(
+    //             color: Colors.white,
+    //             fontSize: 21,
+    //             fontWeight: FontWeight.bold,
+    //           ),
+    //         ),
+    //         SizedBox(
+    //           width: 20,
+    //         ),
+    //         Icon(
+    //           Icons.delete,
+    //           color: Colors.white,
+    //         ),
+    //       ],
+    //     ),
+    //   ),
+    // ),
+    // background: Container(
+    //   color: Colors.green[400],
+    //   child: const Padding(
+    //     padding: EdgeInsets.all(16.0),
+    //     child: Row(
+    //       children: [
+    //         Icon(
+    //           Icons.edit,
+    //           color: Colors.white,
+    //         ),
+    //         SizedBox(
+    //           width: 20,
+    //         ),
+    //         Text(
+    //           "Edit",
+    //           style: TextStyle(
+    //               color: Colors.white,
+    //               fontSize: 21,
+    //               fontWeight: FontWeight.bold),
+    //         ),
+    //       ],
+    //     ),
+    //   ),
+    // ),
+    // confirmDismiss: (direction) async {
+    //   return false; // direction == DismissDirection.endToStart;
+    // },
+    //   child: ListTile(
+    //     onLongPress: () async {
+    //       isSelected = idx;
+    //       final x = await openDialogItem(items[idx]);
+    //       isSelected = -1;
+    //     },
+    //     leading: Icon(
+    //       Icons.wallet,
+    //       color: () {
+    //         if (currentItem.isCredit() && currentItem.paid == 1) {
+    //           return Colors.black54;
+    //         }
+    //         return const Color.fromARGB(255, 66, 133, 244);
+    //       }(), //Theme.of(context).colorScheme.onSurfaceVariant
+    //       size: 26,
+    //     ),
+    //     subtitle: Text(
+    //         "${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
+    //         style: TextStyle(
+    //           fontSize: 14,
+    //           color: Colors.grey[600],
+    //         )),
+    //     trailing: Text(
+    //       '${currentItem.price.format()} DNT',
+    //       style: TextStyle(
+    //         fontSize: 18,
+    //         color: currentItem.paid == 1
+    //             ? currentItem.isCredit()
+    //                 ? const Color.fromARGB(255, 219, 68, 55)
+    //                 : const Color.fromARGB(255, 15, 157, 88)
+    //             : Colors.black54,
+    //       ),
+    //     ),
+    //     title: Text(
+    //       currentItem.title,
+    //       style: TextStyle(
+    //         fontSize: 18,
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 
   Widget? itemBuilderByDate(BuildContext context, int idx) {
