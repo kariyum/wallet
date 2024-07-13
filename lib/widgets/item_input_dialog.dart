@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:walletapp/models/item.dart';
 
 import 'custom_checkbox.dart';
@@ -69,6 +70,10 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
             children: [
               debitButton(
                   titleController, priceController, notesController, formKey),
+              const SizedBox(
+                height: 40,
+                child: VerticalDivider(width: 1, ),
+              ),
               creditButton(
                   formKey, priceController, titleController, notesController)
             ],
@@ -158,7 +163,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
               },
               textCapitalization: TextCapitalization.sentences,
               controller: fieldTextEditingController,
-              autofocus: true,
+              autofocus: widget.defaultItem == null,
               decoration: const InputDecoration(
                 alignLabelWithHint: true,
                 labelText: 'Item',
@@ -265,13 +270,16 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
       TextEditingController priceController,
       TextEditingController notesController,
       TextEditingController dateController) {
-    final DateTime? defaultDateTime = widget.defaultItem != null ? DateTime.fromMillisecondsSinceEpoch(widget.defaultItem!.timestamp): null;
+    final DateTime? defaultDateTime = widget.defaultItem != null
+        ? DateTime.fromMillisecondsSinceEpoch(widget.defaultItem!.timestamp)
+        : null;
     final DateTime dateTime = defaultDateTime ?? DateTime.now();
     TextEditingController timeController = TextEditingController(
-        text: "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}"
-    );
+        text:
+            "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}");
 
-    dateController.text = "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}";
+    dateController.text =
+        "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}";
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
@@ -284,85 +292,12 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                 children: [
                   itemInputTitle(items, titleController),
                   const Padding(padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0)),
-                  priceInputField(
-                      formKey, priceController, titleController, notesController),
+                  priceInputField(formKey, priceController, titleController,
+                      notesController),
                   const Padding(padding: EdgeInsets.only(top: 16.0)),
                   textArea(notesController),
                   // TimePickerDialog(initialTime: TimeOfDay(hour: 1, minute: 1)),
-                  Row(
-                    children: [
-                      Flexible(
-                        flex: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
-                          child: TextField(
-                            controller: dateController,
-                            onTap: () async {
-                              selectDateField(dateController);
-                            },
-                            readOnly: true,
-                            canRequestFocus: false,
-                            showCursor: false,
-                            autofocus: false,
-                            decoration: InputDecoration(
-                              alignLabelWithHint: true,
-                              labelText: 'Date',
-                              labelStyle: const TextStyle(
-                                fontSize: 17,
-                              ),
-                              suffixIcon: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.date_range,
-                                  ),
-                                  onPressed: () async {
-                                    selectDateField(dateController);
-                                  },
-                                ),
-                              ),
-                              border: const OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Flexible(
-                        flex: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
-                          child: TextField(
-                            controller: timeController,
-                            onTap: () async {
-                              selectTimeField(timeController);
-                            },
-                            canRequestFocus: false,
-                            showCursor: false,
-                            autofocus: false,
-                            readOnly: true,
-                            decoration: InputDecoration(
-                              alignLabelWithHint: true,
-                              labelText: 'Time',
-                              labelStyle: const TextStyle(
-                                fontSize: 17,
-                              ),
-                              suffixIcon: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.access_time_outlined,
-                                  ),
-                                  onPressed: () async {
-                                    selectTimeField(timeController);
-                                  },
-                                ),
-                              ),
-                              border: const OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
                     child: CustomCheckBox(
@@ -372,6 +307,81 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                       },
                     ),
                   ),
+                  if (widget.defaultItem != null)
+                    Row(
+                      children: [
+                        Flexible(
+                          flex: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
+                            child: TextField(
+                              controller: dateController,
+                              onTap: () async {
+                                selectDateField(dateController);
+                              },
+                              readOnly: true,
+                              canRequestFocus: false,
+                              showCursor: false,
+                              autofocus: false,
+                              decoration: InputDecoration(
+                                alignLabelWithHint: true,
+                                labelText: 'Date',
+                                labelStyle: const TextStyle(
+                                  fontSize: 17,
+                                ),
+                                suffixIcon: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.date_range,
+                                    ),
+                                    onPressed: () async {
+                                      selectDateField(dateController);
+                                    },
+                                  ),
+                                ),
+                                border: const OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Flexible(
+                          flex: 3,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
+                            child: TextField(
+                              controller: timeController,
+                              onTap: () async {
+                                selectTimeField(timeController);
+                              },
+                              canRequestFocus: false,
+                              showCursor: false,
+                              autofocus: false,
+                              readOnly: true,
+                              decoration: InputDecoration(
+                                alignLabelWithHint: true,
+                                labelText: 'Time',
+                                labelStyle: const TextStyle(
+                                  fontSize: 17,
+                                ),
+                                suffixIcon: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.access_time_outlined,
+                                    ),
+                                    onPressed: () async {
+                                      selectTimeField(timeController);
+                                    },
+                                  ),
+                                ),
+                                border: const OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             )
@@ -470,8 +480,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
       GlobalKey<FormState> formKey,
       TextEditingController priceController,
       TextEditingController titleController,
-      TextEditingController notesController
-      ) {
+      TextEditingController notesController) {
     return Flexible(
       fit: FlexFit.tight,
       child: TextButton(

@@ -11,6 +11,7 @@ class AnalyticsPage extends StatefulWidget {
 
   final Map<DateTime, List<Item>> itemsByDate;
   Map<(int, int), List<Item>> itemsByMonth = {};
+
   @override
   State<AnalyticsPage> createState() => _AnalyticsPageState();
 }
@@ -67,7 +68,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 itemBuilder: (context, index) {
                   final date = widget.itemsByMonth.keys.elementAt(index);
                   final localItems = widget.itemsByMonth[date]!;
-                  final itemsByCategory = localItems.groupedByCategoryAndSorted();
+                  final itemsByCategory =
+                      localItems.groupedByCategoryAndSorted();
                   final allDates = localItems
                       .map((item) =>
                           DateTime.fromMillisecondsSinceEpoch(item.timestamp))
@@ -87,28 +89,49 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                               child: Text(
                                 "${fromDate} - ${endDate} ${getMonth(date.$2)}",
                                 style: TextStyle(
-                                    fontSize: 24, fontWeight: FontWeight.bold
-                                ),
+                                    fontSize: 21, fontWeight: FontWeight.bold),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(16.0, 0, 16, 0),
+                              padding:
+                                  const EdgeInsets.fromLTRB(16.0, 0, 16, 0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    "${localItems.totalCredit().format()} TND",
+                                    "${localItems.totalCredit().format()} DNT",
                                     style: TextStyle(
                                         color: const Color.fromARGB(
                                             255, 219, 68, 55),
-                                        fontSize: 18),
+                                        fontSize: 16),
                                   ),
+                                  // Container(
+                                  //   // backgroundColor: Colors.red[100],
+                                  //   // maxRadius: 16,
+                                  //   decoration: BoxDecoration(
+                                  //       color: Colors.red[100],
+                                  //       borderRadius: new BorderRadius.all(
+                                  //           Radius.elliptical(20, 20))),
+                                  //   // backgroundColor: Colors.red[100],
+                                  //   // maxRadius: 16,
+                                  //   child: Padding(
+                                  //     padding: const EdgeInsets.only(
+                                  //         left: 8.0, right: 8.0),
+                                  //     child: Text(
+                                  //       "${localItems.totalCredit().format()} DNT",
+                                  //       style: TextStyle(
+                                  //           color: const Color.fromARGB(
+                                  //               255, 219, 68, 55),
+                                  //           fontSize: 16),
+                                  //     ),
+                                  //   ),
+                                  // ),
                                   Text(
-                                    "${localItems.totalDebit().format()} TND",
+                                    "${localItems.totalDebit().format()} DNT",
                                     style: TextStyle(
                                         color: const Color.fromARGB(
                                             255, 15, 157, 88),
-                                        fontSize: 18),
+                                        fontSize: 16),
                                   ),
                                 ],
                               ),
@@ -126,21 +149,26 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           physics: NeverScrollableScrollPhysics(),
                           itemCount: itemsByCategory.length,
                           itemBuilder: (context, index) {
-                            final category = itemsByCategory.elementAt(index).key;
-                            final total = itemsByCategory.elementAt(index).value;
+                            final category =
+                                itemsByCategory.elementAt(index).key;
+                            final total =
+                                itemsByCategory.elementAt(index).value;
                             return Padding(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.only(
+                                  top: 8.0,
+                                  right: 16.0,
+                                  bottom: 8.0,
+                                  left: 16.0),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     "${category}",
-                                    style: TextStyle(
-                                      fontSize: 18
-                                    ),
+                                    style: TextStyle(fontSize: 18),
                                   ),
-                                  Text("${total.format()} DNT")
+                                  Text("${total.format()} DNT",
+                                      style: TextStyle(fontSize: 15))
                                 ],
                               ),
                             );

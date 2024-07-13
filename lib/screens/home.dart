@@ -420,6 +420,7 @@ class _MyHomePageState extends State<MyHomePage> {
       BuildContext context, int idx, List<Item> items) {
     final currentItem = items.elementAt(idx);
     return ListTile(
+      visualDensity: const VisualDensity(vertical: VisualDensity.minimumDensity),
       onLongPress: () async {
         isSelected = idx;
         final x = await openDialogItem(items[idx]);
