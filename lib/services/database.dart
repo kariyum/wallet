@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
@@ -53,7 +54,7 @@ class DatabaseRepository {
       if (item.id == null) {
         await db.insert('items', item.toMap());
       } else {
-        await db.update('items', item.toMapUpdate(), where: 'id = ?', whereArgs: [item.id]);
+        await db.insert('items', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
       }
       // print('inserted');
     } catch (e) {
@@ -113,7 +114,6 @@ class DatabaseRepository {
 
   Future<List<Item>> getAllItems() async {
     final stopwatch = Stopwatch()..start();
-    print("started at ");
     final db = await instance.database;
 
     final result = await db.query('items', orderBy: 'timestamp DESC');
@@ -125,6 +125,14 @@ class DatabaseRepository {
 
     // print(result.map((json) => Item.fromJson(json)).toList());
     return result.map((json) => Item.fromJson(json)).toList();
+  }
+
+  Future<void> saveAllItems(List<Item> items) {
+    List<Future<void>> futures = [];
+    for (var item in items) {
+      futures.add(item.persist());
+    }
+    return Future.wait(futures);
   }
 
   Future<void> deleteDB() async {

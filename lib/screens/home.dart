@@ -1,5 +1,6 @@
+import 'dart:async';
+import 'dart:math';
 import 'dart:ui';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:walletapp/models/datetime.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:walletapp/screens/analytics.dart';
 import 'package:walletapp/services/database.dart';
+import 'package:walletapp/services/firebase.dart';
 import 'package:walletapp/widgets/item_input_dialog.dart';
 import 'package:walletapp/widgets/reactive_floating_action_buttion.dart';
 
@@ -25,6 +27,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late bool futurePaymentCheckbox;
 
   bool isDialogOpen = false;
+  final firestore = Firebase();
 
   @override
   void initState() {
@@ -45,6 +48,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void skipLockScreen() async {
     final lpin = await DatabaseRepository.instance.readPin();
     _islocked = lpin.isEmpty ? true : lpin[0] != "-1";
+  }
+
+  Future<void> saveAllItems(List<Item> items) {
+    return DatabaseRepository.instance.saveAllItems(items);
   }
 
   void initDb() async {
@@ -107,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     return Scaffold(
       appBar: AppBar(
-        systemOverlayStyle: SystemUiOverlayStyle(
+        systemOverlayStyle: const SystemUiOverlayStyle(
           systemNavigationBarColor: Colors.transparent,
           // systemNavigationBarDividerColor: ElevationOverlay.applySurfaceTint(Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceTint, 3.0)
         ),
@@ -121,8 +128,11 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Icon(
-              [Icons.account_balance_rounded, Icons.query_stats]
-                  .elementAt(_currentPageIndex),
+              [
+                Icons.account_balance_rounded,
+                Icons.query_stats,
+                Icons.account_balance_rounded
+              ].elementAt(_currentPageIndex),
               size: 40,
               color: Colors.amber[400],
             ),
@@ -132,10 +142,10 @@ class _MyHomePageState extends State<MyHomePage> {
             //     // 5 items per day
             //     int numberOfMonths = 13;
             //     int numberOfItemsPerMonth = 5;
+            //     int numberOfItemsPerDay = 3;
             //
             //     Random r = Random();
-            //     int currentDate = DateTime.now().millisecond;
-            //     DateTime.now().add(Duration(days: -9));
+            //     DateTime currentDate = DateTime.now();
             //     List<String> titles = [
             //       "Milk",
             //       "Chocolate",
@@ -147,22 +157,24 @@ class _MyHomePageState extends State<MyHomePage> {
             //       "Burger"
             //     ];
             //     List<Future<void>> futures = [];
-            //     const monthInMillis = 30 * 24 * 60 * 60 * 1000;
             //     for (int month = 0; month < numberOfMonths; month++) {
-            //       int monthTimestamp = currentDate - monthInMillis * month;
+            //       currentDate = currentDate.subtract(Duration(days: 31));
             //       for (int itemNumber = 0;
             //           itemNumber < numberOfItemsPerMonth;
             //           itemNumber++) {
-            //         String randomTitle =
-            //             titles.elementAt(r.nextInt(titles.length - 1));
-            //         int sign = r.nextBool() ? 1 : -1;
-            //         double price = sign * r.nextDouble() * 100;
-            //         int randomDays = r.nextInt(28) * 24 * 60 * 60 * 1000;
-            //         Item item = Item(
+            //         Duration randomDays = Duration(days: 1 + r.nextInt(10));
+            //         for (int dayNumber = 0; dayNumber < numberOfItemsPerDay; dayNumber++) {
+            //           String randomTitle =
+            //           titles.elementAt(r.nextInt(titles.length - 1));
+            //           int sign = r.nextBool() ? 1 : -1;
+            //           double price = sign * r.nextDouble() * 100;
+            //           Item item = Item(
             //             title: randomTitle,
             //             price: price,
-            //             timestamp: monthTimestamp + randomDays);
-            //         futures.add(item.persist());
+            //             timestamp: currentDate.add(randomDays).millisecondsSinceEpoch,
+            //           );
+            //           futures.add(item.persist());
+            //         }
             //       }
             //     }
             //     Future.wait(futures);
@@ -372,9 +384,77 @@ class _MyHomePageState extends State<MyHomePage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Align(
                     alignment: Alignment.topLeft,
-                    child: Text(
-                      "Transactions",
-                      style: TextStyle(fontSize: 21),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Transactions",
+                          style: TextStyle(fontSize: 21),
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Uploading...')),
+                                  );
+                                }
+                                final futureDocumentId =
+                                    firestore.uploadItems(items);
+                                futureDocumentId.then((documentId) {
+                                  Clipboard.setData(
+                                          ClipboardData(text: documentId))
+                                      .then((_) => ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    'Document id copied to clipboard!')),
+                                          ));
+                                });
+                              },
+                              icon: const Icon(Icons.upload),
+                            ),
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () async {
+                                final futureValue = await openDialogSync();
+                                if (futureValue != null) {
+                                  // downloading
+                                  final futureData =
+                                      firestore.downloadItems(futureValue);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Downloading...'),
+                                      ),
+                                    );
+                                  }
+                                  // updateItems();
+                                  futureData.then((data) {
+                                    setState(() {
+                                      items = data;
+                                      itemsByDate = data.groupedByDay();
+                                    });
+                                    saveAllItems(data).then((_) => {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content:
+                                                  Text('Items saved locally!'),
+                                            ),
+                                          )
+                                        });
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.download),
+                            )
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ),
@@ -387,7 +467,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   // reverse: true,
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: itemsByDate.keys.length,
                   itemBuilder: itemBuilderByDate,
                 ),
@@ -420,10 +500,11 @@ class _MyHomePageState extends State<MyHomePage> {
       BuildContext context, int idx, List<Item> items) {
     final currentItem = items.elementAt(idx);
     return ListTile(
-      visualDensity: const VisualDensity(vertical: VisualDensity.minimumDensity),
+      visualDensity:
+          const VisualDensity(vertical: VisualDensity.minimumDensity),
       onLongPress: () async {
         isSelected = idx;
-        final x = await openDialogItem(items[idx]);
+        await openDialogItem(items[idx]);
         isSelected = -1;
       },
       leading: Icon(
@@ -578,7 +659,7 @@ class _MyHomePageState extends State<MyHomePage> {
             style: TextStyle(fontSize: 18),
           ),
         ),
-        Divider(
+        const Divider(
           height: 4,
           indent: 14,
           endIndent: 10,
@@ -591,7 +672,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // ),
           itemCount: itemsByDate.values.elementAt(idx).length,
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, j) {
             return itemBuilderByDateSub(
                 context, j, itemsByDate.values.elementAt(idx));
@@ -822,6 +903,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // backgroundColor: Colors.amber,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Flexible(
               child: Text(a.title),
@@ -883,6 +965,73 @@ class _MyHomePageState extends State<MyHomePage> {
               //     ),
               //   ),
               // ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<String?> openDialogSync() {
+    TextEditingController idController = TextEditingController();
+    return showGeneralDialog<String?>(
+      barrierDismissible: true,
+      barrierLabel: '',
+      // barrierColor: Colors.black38,
+      transitionDuration: Durations.short4,
+      context: context,
+      // barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.1),
+      transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
+        filter:
+            ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
+        child: FadeTransition(
+          opacity: anim1,
+          child: child,
+        ),
+      ),
+      pageBuilder: (context, anim1, anim2) => AlertDialog(
+        // actionsAlignment: MainAxisAlignment.spaceBetween,
+        actionsPadding:
+            const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(idController.text);
+            },
+            child: const Text(
+              "Download",
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+        elevation: 10.0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black,
+        // backgroundColor: Colors.amber,
+        title: const Text("Sync"),
+        content: SizedBox(
+          width: 400,
+          // height: 100,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextField(
+                controller: idController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                  labelText: 'Document id',
+                  labelStyle: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+                textInputAction: TextInputAction.newline,
+              )
             ],
           ),
         ),
