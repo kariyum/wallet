@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'dart:math';
 
+import 'package:walletapp/models/monthly_expense.dart';
 import 'package:walletapp/services/database.dart';
 
 class Item {
@@ -74,7 +75,7 @@ class Item {
   }
 
   Future<void> persist() async {
-    await DatabaseRepository.instance.insertItem(item: this);
+    return DatabaseRepository.instance.insertItem(item: this);
   }
 
   bool isCredit() {
@@ -182,20 +183,18 @@ extension Transactions on List<Item> {
     return result;
   }
 
-  List<MapEntry<String, double>> groupedByCategoryAndSorted() {
+  List<MonthlyExpense> groupedByCategoryAndSorted() {
     Map<String, List<Item>> itemsByCategory = groupedByCategory();
-    Map<String, double> categoryToSum = itemsByCategory.map((key, value) {
-      var c = value.map((e) => e.price);
-      var sum = c.fold(0.0, (previousValue, element) => previousValue + element);
-      return MapEntry(key, sum);
-    });
-    List<MapEntry<String, double>> categoriesList = categoryToSum
-        .entries
-        .toList();
-    List<MapEntry<String, double>> credits = categoriesList.where((element) => element.value < 0).toList();
-    List<MapEntry<String, double>> debits = categoriesList.where((element) => element.value >= 0).toList();
-    credits.sort((a, b) => a.value.compareTo(b.value));
-    debits.sort((a, b) => b.value.compareTo(a.value));
+    List<MonthlyExpense> categoriesList = itemsByCategory.map((key, value) {
+      final prices = value.map((e) => e.price);
+      final sum = prices.fold(0.0, (previousValue, element) => previousValue + element);
+      return MapEntry(key, MonthlyExpense(name: key, count: value.length, total: sum));
+    }).values.toList();
+
+    List<MonthlyExpense> credits = categoriesList.where((element) => element.total < 0).toList();
+    List<MonthlyExpense> debits = categoriesList.where((element) => element.total >= 0).toList();
+    credits.sort((a, b) => a.total.compareTo(b.total));
+    debits.sort((a, b) => b.total.compareTo(a.total));
     return credits + debits;
   }
 }

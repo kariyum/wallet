@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:walletapp/models/item.dart';
-import 'package:walletapp/widgets/stats.dart';
+import 'package:walletapp/widgets/chart.dart';
 import 'package:walletapp/services/utils.dart';
 
 class AnalyticsPage extends StatefulWidget {
@@ -83,13 +85,16 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Text(
                                 "${fromDate} - ${endDate} ${getMonth(date.$2)}",
-                                style: TextStyle(
-                                    fontSize: 21, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 21,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             Padding(
@@ -98,13 +103,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text(
-                                    "${localItems.totalCredit().format()} DNT",
-                                    style: TextStyle(
-                                        color: const Color.fromARGB(
-                                            255, 219, 68, 55),
-                                        fontSize: 16),
-                                  ),
                                   // Container(
                                   //   // backgroundColor: Colors.red[100],
                                   //   // maxRadius: 16,
@@ -127,8 +125,15 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                                   //   ),
                                   // ),
                                   Text(
+                                    "${localItems.totalCredit().format()} DNT",
+                                    style: const TextStyle(
+                                        color: const Color.fromARGB(
+                                            255, 219, 68, 55),
+                                        fontSize: 16),
+                                  ),
+                                  Text(
                                     "${localItems.totalDebit().format()} DNT",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: const Color.fromARGB(
                                             255, 15, 157, 88),
                                         fontSize: 16),
@@ -146,13 +151,15 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         ListView.builder(
                           scrollDirection: Axis.vertical,
                           shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
+                          physics: const NeverScrollableScrollPhysics(),
                           itemCount: itemsByCategory.length,
                           itemBuilder: (context, index) {
                             final category =
-                                itemsByCategory.elementAt(index).key;
+                                itemsByCategory.elementAt(index).name;
                             final total =
-                                itemsByCategory.elementAt(index).value;
+                                itemsByCategory.elementAt(index).total;
+                            final count =
+                                itemsByCategory.elementAt(index).count;
                             return Padding(
                               padding: const EdgeInsets.only(
                                   top: 8.0,
@@ -163,9 +170,26 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    "${category}",
-                                    style: TextStyle(fontSize: 18),
+                                  Flexible(
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          "$count×",
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        const VerticalDivider(),
+                                        Flexible(
+                                          child: Text(
+                                            category,
+                                            style: const TextStyle(
+                                                fontSize: 18,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   Text("${total.format()} DNT",
                                       style: TextStyle(fontSize: 15))
