@@ -1,7 +1,7 @@
 class MonthlyExpense {
-  String name;
-  double total;
-  int count;
+  final String name;
+  final double total;
+  final int count;
 
   MonthlyExpense(
       {required this.name, required this.count, required this.total});
