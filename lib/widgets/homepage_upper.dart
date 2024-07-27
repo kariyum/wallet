@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:walletapp/services/database.dart';
 import 'package:walletapp/models/item.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:walletapp/widgets/homepage_upper.dart';
-import 'package:walletapp/widgets/item_input_dialog.dart';
-import 'dart:ui';
 
 class HomePageFirstHalf extends StatefulWidget {
   final List<Item> items;

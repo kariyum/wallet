@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:walletapp/screens/home.dart';
 import 'package:walletapp/services/lock_screen.dart';
@@ -12,7 +10,7 @@ class LockScreen extends StatefulWidget {
 }
 
 class _LockScreenState extends State<LockScreen> {
-  bool _isLocked = true;
+  bool _isLocked = false;
   String? _pin;
   @override
   void initState() {

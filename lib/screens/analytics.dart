@@ -1,9 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:walletapp/models/item.dart';
-import 'package:walletapp/widgets/chart.dart';
 import 'package:walletapp/services/utils.dart';
+import 'package:walletapp/widgets/chart.dart';
 
 class AnalyticsPage extends StatefulWidget {
   AnalyticsPage({

@@ -1,8 +1,11 @@
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
-import 'package:walletapp/models/item.dart';
-import 'package:sqflite/sqflite.dart';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:walletapp/models/item.dart';
 
 class DatabaseRepository {
   static final DatabaseRepository instance = DatabaseRepository._init();
@@ -17,14 +20,31 @@ class DatabaseRepository {
 
   Future<Database> _initDB(String filePath) async {
     // await deleteDatabase("wallet.db");
-    final dbPath = await getDatabasesPath();
-    final path = p.join(dbPath, filePath);
-    return await openDatabase(
-      path,
-      version: 2,
-      onCreate: _createDB,
-      onUpgrade: _upgradeDB,
-    );
+    if (kIsWeb) {
+      final factory = databaseFactoryFfiWeb;
+      // final dbPath = await getDatabasesPath();
+      // final path = p.join(dbPath, filePath);
+      final db = await factory.openDatabase("test.db", options: OpenDatabaseOptions(
+          version: 2,
+          onCreate: _createDB,
+          onUpgrade: _upgradeDB
+      ));
+      debugPrint("$db");
+      return db;
+    } else
+      // if (Platform.isAndroid) {
+    //   final dbPath = await getDatabasesPath();
+    //   final path = p.join(dbPath, filePath);
+    //   return await openDatabase(
+    //     path,
+    //     version: 2,
+    //     onCreate: _createDB,
+    //     onUpgrade: _upgradeDB,
+    //   );
+    // } else
+     {
+      throw Exception("DB IS NOT INITIALIZED");
+    }
   }
 
   FutureOr<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {

@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -57,6 +54,15 @@ class DefaultFirebaseOptions {
     appId: '1:32362467807:android:39d75bf18ca91fc3adb46a',
     messagingSenderId: '32362467807',
     projectId: 'wallet-app-99',
+    storageBucket: 'wallet-app-99.appspot.com',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBfgtNp1wbRRqNXrIKBjeL7Z-CGl3YhGVQ',
+    appId: '1:32362467807:web:4c1275f62e55423fadb46a',
+    messagingSenderId: '32362467807',
+    projectId: 'wallet-app-99',
+    authDomain: 'wallet-app-99.firebaseapp.com',
     storageBucket: 'wallet-app-99.appspot.com',
   );
 
