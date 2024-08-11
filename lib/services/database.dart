@@ -22,8 +22,6 @@ class DatabaseRepository {
     // await deleteDatabase("wallet.db");
     if (kIsWeb) {
       final factory = databaseFactoryFfiWeb;
-      // final dbPath = await getDatabasesPath();
-      // final path = p.join(dbPath, filePath);
       final db = await factory.openDatabase("test.db", options: OpenDatabaseOptions(
           version: 2,
           onCreate: _createDB,
@@ -31,17 +29,16 @@ class DatabaseRepository {
       ));
       debugPrint("$db");
       return db;
+    } else if (Platform.isAndroid) {
+      final dbPath = await getDatabasesPath();
+      final path = p.join(dbPath, filePath);
+      return await openDatabase(
+        path,
+        version: 2,
+        onCreate: _createDB,
+        onUpgrade: _upgradeDB,
+      );
     } else
-      // if (Platform.isAndroid) {
-    //   final dbPath = await getDatabasesPath();
-    //   final path = p.join(dbPath, filePath);
-    //   return await openDatabase(
-    //     path,
-    //     version: 2,
-    //     onCreate: _createDB,
-    //     onUpgrade: _upgradeDB,
-    //   );
-    // } else
      {
       throw Exception("DB IS NOT INITIALIZED");
     }
@@ -141,7 +138,7 @@ class DatabaseRepository {
     stopwatch.stop();
     final milliseconds = stopwatch.elapsedMilliseconds;
 
-    print('Future took $milliseconds milliseconds to complete.');
+    debugPrint('# Future took $milliseconds milliseconds to complete.');
 
     // print(result.map((json) => Item.fromJson(json)).toList());
     return result.map((json) => Item.fromJson(json)).toList();

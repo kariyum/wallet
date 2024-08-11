@@ -10,22 +10,23 @@ class AnalyticsPage extends StatefulWidget {
   });
 
   final Map<DateTime, List<Item>> itemsByDate;
-  Map<(int, int), List<Item>> itemsByMonth = {};
 
   @override
   State<AnalyticsPage> createState() => _AnalyticsPageState();
 }
 
 class _AnalyticsPageState extends State<AnalyticsPage> {
+  Map<(int, int), List<Item>> itemsByMonth = {};
   @override
   void initState() {
-    widget.itemsByMonth = widget.itemsByDate.flatten().groupedByMonth();
+    itemsByMonth = widget.itemsByDate.flatten().groupedByMonth();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    widget.itemsByMonth = widget.itemsByDate.flatten().groupedByMonth();
+    debugPrint("BUILDING analytics page");
+    itemsByMonth = widget.itemsByDate.flatten().groupedByMonth();
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,10 +65,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 scrollDirection: Axis.vertical,
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),
-                itemCount: widget.itemsByMonth.length,
+                itemCount: itemsByMonth.length,
                 itemBuilder: (context, index) {
-                  final date = widget.itemsByMonth.keys.elementAt(index);
-                  final localItems = widget.itemsByMonth[date]!;
+                  final date = itemsByMonth.keys.elementAt(index);
+                  final localItems = itemsByMonth[date]!;
                   final itemsByCategory =
                       localItems.groupedByCategoryAndSorted();
                   final allDates = localItems

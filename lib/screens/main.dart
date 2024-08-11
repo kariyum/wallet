@@ -1,35 +1,26 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:walletapp/models/datetime.dart';
-import 'package:walletapp/models/item.dart';
-import 'package:walletapp/screens/analytics.dart';
-import 'package:walletapp/services/database.dart';
-import 'package:walletapp/services/firebase.dart';
-import 'package:walletapp/widgets/item_input_dialog.dart';
-import 'package:walletapp/widgets/reactive_floating_action_buttion.dart';
 
+import '../models/item.dart';
+import '../services/database.dart';
+import '../services/firebase.dart';
 import '../widgets/animated_count.dart';
-import 'main.dart';
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+import '../widgets/item_input_dialog.dart';
+class Main extends StatefulWidget {
+  final ScrollController scrollController;
+  const Main({
+    super.key,
+    required this.scrollController,
+  });
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<Main> createState() => MainState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  late TextEditingController titleController = TextEditingController();
-  late TextEditingController priceController;
-  late TextEditingController notesController;
-  late TextEditingController dateController = TextEditingController();
-  late bool futurePaymentCheckbox;
-
-  bool isDialogOpen = false;
-  final firestore = Firebase();
+class MainState extends State<Main> {
 
   @override
   void initState() {
@@ -45,223 +36,30 @@ class _MyHomePageState extends State<MyHomePage> {
 
     notesController = TextEditingController();
     notesController.text = '';
+    super.initState();
+
   }
 
-  void skipLockScreen() async {
-    final lpin = await DatabaseRepository.instance.readPin();
-    _islocked = lpin.isEmpty ? true : lpin[0] != "-1";
-  }
-
-  Future<void> saveAllItems(List<Item> items) {
-    return DatabaseRepository.instance.saveAllItems(items);
-  }
-
-  void initDb() async {
-    // await deleteDatabase();
-    await DatabaseRepository.instance.database;
-  }
-
-  @override
-  void dispose() {
-    titleController.dispose();
-    priceController.dispose();
-    notesController.dispose();
-
-    super.dispose();
-  }
-
-  Future<List<Item>> getAllItems() async {
-    return await DatabaseRepository.instance.getAllItems();
-  }
-
-  List<Item> items = [];
-  Map<DateTime, List<Item>> itemsByDate = {};
-
-  void updateItems() async {
-    await DatabaseRepository.instance.getAllItems().then((value) {
-      setState(() {
-        items = value;
-        itemsByDate = value.groupedByDay();
-      });
-    }).catchError((e) => debugPrint(e.toString()));
-  }
-
-  double totalExpenses() {
-    debugPrint("TOTAL EXPENSES");
-    final res = items.isEmpty
-        ? 0.0
-        : items
-            .where((e) => e.paid == 1)
-            .map((e) => e.price)
-            .reduce((priceA, priceB) => priceA + priceB);
-    return double.parse((res).toStringAsFixed(3));
-  }
-
-  double forecastedExpenses() {
-    final res = items.isEmpty
-        ? 0.0
-        : items.map((e) => e.price).reduce((priceA, priceB) => priceA + priceB);
-    return double.parse(
-        ((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
-  }
-
+  final firestore = Firebase();
+  bool isChecked = false;
+  final _formKey = GlobalKey<FormState>();
   int isSelected = -1;
-
-  final ScrollController _scrollController = ScrollController();
-
-  int _currentPageIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    return Scaffold(
-      appBar: AppBar(
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          systemNavigationBarColor: Colors.transparent,
-          // systemNavigationBarDividerColor: ElevationOverlay.applySurfaceTint(Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceTint, 3.0)
-        ),
-        // backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: Theme.of(context).appBarTheme.elevation,
-        primary: true,
-        // toolbarHeight: 0,
-        // scrolledUnderElevation: 0.0,
-        backgroundColor: AppBarTheme.of(context).backgroundColor,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(
-              [
-                Icons.account_balance_rounded,
-                Icons.query_stats,
-                Icons.account_balance_rounded
-              ].elementAt(_currentPageIndex),
-              size: 40,
-              color: Colors.amber[400],
-            ),
-            // TextButton(
-            //   onPressed: () async {
-            //     // inserts 13 months of data
-            //     // 5 items per day
-            //     int numberOfMonths = 13;
-            //     int numberOfItemsPerMonth = 5;
-            //     int numberOfItemsPerDay = 3;
-            //
-            //     Random r = Random();
-            //     DateTime currentDate = DateTime.now();
-            //     List<String> titles = [
-            //       "Milk",
-            //       "Chocolate",
-            //       "Water",
-            //       "Coffee",
-            //       "Electricity",
-            //       "Mouse",
-            //       "Needs",
-            //       "Burger"
-            //     ];
-            //     List<Future<void>> futures = [];
-            //     for (int month = 0; month < numberOfMonths; month++) {
-            //       currentDate = currentDate.subtract(Duration(days: 31));
-            //       for (int itemNumber = 0;
-            //           itemNumber < numberOfItemsPerMonth;
-            //           itemNumber++) {
-            //         Duration randomDays = Duration(days: 1 + r.nextInt(10));
-            //         for (int dayNumber = 0; dayNumber < numberOfItemsPerDay; dayNumber++) {
-            //           String randomTitle =
-            //           titles.elementAt(r.nextInt(titles.length - 1));
-            //           int sign = r.nextBool() ? 1 : -1;
-            //           double price = sign * r.nextDouble() * 100;
-            //           Item item = Item(
-            //             title: randomTitle,
-            //             price: price,
-            //             timestamp: currentDate.add(randomDays).millisecondsSinceEpoch,
-            //           );
-            //           futures.add(item.persist());
-            //         }
-            //       }
-            //     }
-            //     Future.wait(futures);
-            //     setState(() {
-            //       updateItems();
-            //     });
-            //   },
-            //   child: Text("Generate data"),
-            // ),
-            const VerticalDivider(),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Welcome!",
-                  style: TextStyle(
-                      fontSize: 14, color: Color.fromARGB(255, 117, 117, 117)),
-                ),
-                Text(
-                  ["Overview", "Statistics", "Page3"]
-                      .elementAt(_currentPageIndex),
-                )
-              ],
-            ),
-          ],
-        ),
-      ),
-      body: [
-        // homePageWidget(context),
-        Main(scrollController: _scrollController),
-        AnalyticsPage(itemsByDate: items.groupedByDay()),
-        Text("Page 3"),
-      ][_currentPageIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentPageIndex,
-        onDestinationSelected: (int index) {
-          setState(() {
-            _currentPageIndex = index;
-          });
-        },
-        destinations: const <Widget>[
-          NavigationDestination(
-            selectedIcon: Icon(Icons.home),
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.query_stats),
-            icon: Icon(Icons.query_stats_outlined),
-            //Badge( label: Text('2'), child: Icon(Icons.query_stats), ),
-            label: 'Stats',
-          ),
-          // NavigationDestination(
-          //   icon: Badge(
-          //     child: Icon(Icons.notifications_sharp),
-          //   ),
-          //   label: 'Notifications',
-          // ),
-        ],
-      ),
-      floatingActionButton: ReactiveFloatingActionButton(
-        controller: _scrollController,
-        onPressed: () async {
-          final x = await openFullScreenDialog();
-          if (x == null) {
-            debugPrint(x.toString());
-          } else {
-            await x.persist();
-            updateItems();
-          }
-        },
-        currentPageIndex: _currentPageIndex,
-        visibleOnPageIndex: 0,
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
   bool showCurrentBalance = true;
   bool showCardInfo = false;
+  Map<DateTime, List<Item>> itemsByDate = {};
+  List<Item> items = [];
+  late TextEditingController titleController = TextEditingController();
+  late TextEditingController priceController;
+  late TextEditingController notesController;
+  late TextEditingController dateController = TextEditingController();
+  late bool futurePaymentCheckbox;
 
-  Widget homePageWidget(BuildContext context) {
-    debugPrint("Building homePageWidget");
+  bool isDialogOpen = false;
+  @override
+  Widget build(BuildContext context) {
+    print("REBUILDING MAIN");
     return SingleChildScrollView(
-      controller: _scrollController,
+      controller: widget.scrollController,
       child: ListView(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -286,38 +84,22 @@ class _MyHomePageState extends State<MyHomePage> {
                                 });
                                 return;
                               },
-                              child: () {
-                                if (showCardInfo && showCurrentBalance) {
-                                  return AnimatedCount(
-                                      count: items.availableBalance());
-                                }
-                                if (showCardInfo && !showCurrentBalance) {
-                                  return AnimatedCount(
-                                      count: forecastedExpenses());
-                                }
-                                return const Text(
-                                  "---",
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                );
-                              }(),
-                              // child: Text(
-                              //   () {
-                              //     if (showCardInfo && showCurrentBalance) {
-                              //       return "${items.availableBalance().format()} DNT";
-                              //     }
-                              //     if (showCardInfo && !showCurrentBalance) {
-                              //       return "${forecastedExpenses().format()} DNT";
-                              //     }
-                              //     return "---";
-                              //   }(),
-                              //   style: const TextStyle(
-                              //     fontSize: 24,
-                              //     fontWeight: FontWeight.bold,
-                              //   ),
-                              // ),
+                              // child: AnimatedCount(count: items.availableBalance()),
+                              child: Text(
+                                () {
+                                  if (showCardInfo && showCurrentBalance) {
+                                    return "${items.availableBalance().format()} DNT";
+                                  }
+                                  if (showCardInfo && !showCurrentBalance) {
+                                    return "${items.forecastedExpenses().format()} DNT";
+                                  }
+                                  return "---";
+                                }(),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                             TapRegion(
                               onTapInside: (event) {
@@ -453,16 +235,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                   );
                                 }
                                 final futureDocumentId =
-                                    firestore.uploadItems(items);
+                                firestore.uploadItems(items);
                                 futureDocumentId.then((documentId) {
                                   Clipboard.setData(
-                                          ClipboardData(text: documentId))
+                                      ClipboardData(text: documentId))
                                       .then((_) => ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                                content: Text(
-                                                    'Document id copied to clipboard!')),
-                                          ));
+                                      .showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Document id copied to clipboard!')),
+                                  ));
                                 });
                               },
                               icon: const Icon(Icons.upload),
@@ -474,7 +256,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 if (futureValue != null) {
                                   // downloading
                                   final futureData =
-                                      firestore.downloadItems(futureValue);
+                                  firestore.downloadItems(futureValue);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -489,14 +271,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                       itemsByDate = data.groupedByDay();
                                     });
                                     saveAllItems(data).then((_) => {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content:
-                                                  Text('Items saved locally!'),
-                                            ),
-                                          )
-                                        });
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content:
+                                          Text('Items saved locally!'),
+                                        ),
+                                      )
+                                    });
                                   });
                                 }
                               },
@@ -511,7 +293,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ListView.separated(
                   // controller: _scrollController,
                   separatorBuilder: (BuildContext context, int index) =>
-                      const SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   // reverse: true,
@@ -546,12 +328,126 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Future<String?> openDialogSync() {
+    TextEditingController idController = TextEditingController();
+    return showGeneralDialog<String?>(
+      barrierDismissible: true,
+      barrierLabel: '',
+      // barrierColor: Colors.black38,
+      transitionDuration: Durations.short4,
+      context: context,
+      // barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.1),
+      transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
+        filter:
+        ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
+        child: FadeTransition(
+          opacity: anim1,
+          child: child,
+        ),
+      ),
+      pageBuilder: (context, anim1, anim2) => AlertDialog(
+        // actionsAlignment: MainAxisAlignment.spaceBetween,
+        actionsPadding:
+        const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(idController.text);
+            },
+            child: const Text(
+              "Download",
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+        elevation: 10.0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black,
+        // backgroundColor: Colors.amber,
+        title: const Text("Sync"),
+        content: SizedBox(
+          width: 400,
+          // height: 100,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextField(
+                controller: idController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                  labelText: 'Document id',
+                  labelStyle: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+                textInputAction: TextInputAction.newline,
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget? itemBuilderByDate(BuildContext context, int idx) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+          child: Text(
+            itemsByDate.keys.elementAt(idx).formatListTile(),
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+        const Divider(
+          height: 4,
+          indent: 14,
+          endIndent: 10,
+        ),
+        ListView.builder(
+          // separatorBuilder: (context, index) => Divider(
+          //  indent: 20,
+          //  endIndent: 20,
+          //  height: 0,
+          // ),
+          itemCount: itemsByDate.values.elementAt(idx).length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, j) {
+            return itemBuilderByDateSub(
+                context, j, itemsByDate.values.elementAt(idx));
+          },
+        ),
+        // for (var elementIndex = 0;
+        //     elementIndex < itemsByDate.values.elementAt(idx).length;
+        //     elementIndex += 1)
+        //   ListTile(
+        //     title: Text(itemsByDate.values
+        //         .elementAt(idx)
+        //         .elementAt(elementIndex)
+        //         .title),
+        //   )
+      ],
+    );
+  }
+
+  Future<void> saveAllItems(List<Item> items) {
+    return DatabaseRepository.instance.saveAllItems(items);
+  }
+
   Widget? itemBuilderByDateSub(
       BuildContext context, int idx, List<Item> items) {
     final currentItem = items.elementAt(idx);
     return ListTile(
       visualDensity:
-          const VisualDensity(vertical: VisualDensity.minimumDensity),
+      const VisualDensity(vertical: VisualDensity.minimumDensity),
       onLongPress: () async {
         isSelected = idx;
         await openDialogItem(items[idx]);
@@ -698,177 +594,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // );
   }
 
-  Widget? itemBuilderByDate(BuildContext context, int idx) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-          child: Text(
-            itemsByDate.keys.elementAt(idx).formatListTile(),
-            style: TextStyle(fontSize: 18),
-          ),
-        ),
-        const Divider(
-          height: 4,
-          indent: 14,
-          endIndent: 10,
-        ),
-        ListView.builder(
-          // separatorBuilder: (context, index) => Divider(
-          //  indent: 20,
-          //  endIndent: 20,
-          //  height: 0,
-          // ),
-          itemCount: itemsByDate.values.elementAt(idx).length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, j) {
-            return itemBuilderByDateSub(
-                context, j, itemsByDate.values.elementAt(idx));
-          },
-        ),
-        // for (var elementIndex = 0;
-        //     elementIndex < itemsByDate.values.elementAt(idx).length;
-        //     elementIndex += 1)
-        //   ListTile(
-        //     title: Text(itemsByDate.values
-        //         .elementAt(idx)
-        //         .elementAt(elementIndex)
-        //         .title),
-        //   )
-      ],
-    );
-  }
-
-  Widget? itemBuilderSimple(BuildContext context, int idx) {
-    // idx = items.length - idx - 1;
-    return ListTile(
-      onLongPress: () async {
-        isSelected = idx;
-        final x = await openDialogItem(items[idx]);
-        isSelected = -1;
-      },
-      leading: Icon(
-        Icons.paid,
-        color: items[idx].paid == 1
-            ? const Color.fromARGB(255, 66, 133, 244)
-            : Colors.black54, //Theme.of(context).colorScheme.onSurfaceVariant
-        size: 26,
-      ),
-      subtitle: Text(items[idx].note(),
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          )),
-      trailing: Text(
-        '${items[idx].price.format()} DNT',
-        style: TextStyle(
-          fontSize: 18,
-          color: items[idx].paid == 1
-              ? items[idx].isCredit()
-                  ? const Color.fromARGB(255, 219, 68, 55)
-                  : const Color.fromARGB(255, 15, 157, 88)
-              : Colors.black54,
-        ),
-      ),
-      title: Flex(
-        direction: Axis.horizontal,
-        children: [
-          Flexible(
-            child: Text(
-              items[idx].title,
-              style: const TextStyle(
-                fontSize: 21,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  bool _islocked = true;
-
-  Widget showLockScreen() {
-    return PopScope(
-      child: Scaffold(
-        appBar: AppBar(),
-        body: Column(
-          children: [
-            const Text("Welcome"),
-            const Text("Enter your PIN please"),
-            Center(
-              child: SizedBox(
-                width: 300,
-                child: TextFormField(
-                  onFieldSubmitted: (value) async {
-                    // await DatabaseRepository.instance.deletePin();
-                    // debugPrint("Deleting pin");
-                    final x = await DatabaseRepository.instance.readPin();
-                    if (x.isEmpty) {
-                      value = value.isEmpty ? "-1" : value;
-                      await DatabaseRepository.instance.insertPin(pin: value);
-                      // final xx = await DatabaseRepository.instance.readPin();
-                      // debugPrint(xx.toString());
-                      setState(() {
-                        _islocked = false;
-                      });
-                    } else {
-                      if (x[0].toString() == value) {
-                        setState(() {
-                          _islocked = false;
-                        });
-                      }
-                    }
-                  },
-                  textAlign: TextAlign.center,
-                  obscureText: true,
-                  enableSuggestions: false,
-                  autocorrect: false,
-                  autofocus: true,
-                  style: const TextStyle(
-                    fontSize: 22,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: 'PIN',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  bool isChecked = false;
-
-  final _formKey = GlobalKey<FormState>();
-
-  Future<Item?> openFullScreenDialog({Item? defaultItem}) {
-    titleController.text = '';
-    priceController.text = '';
-    notesController.text = '';
-    dateController.text = '';
-    isChecked = false;
-    return showGeneralDialog(
-      context: context,
-      pageBuilder: (context, a, b) => Dialog.fullscreen(
-        child: ItemInputDialog(
-          formkey: _formKey,
-          notesController: notesController,
-          titleController: titleController,
-          priceController: priceController,
-          dateController: dateController,
-          items: items,
-          defaultItem: defaultItem,
-        ),
-      ),
-    );
-  }
-
   Future<Item?> openDialogItem(Item a) {
     return showGeneralDialog(
       barrierDismissible: true,
@@ -880,7 +605,7 @@ class _MyHomePageState extends State<MyHomePage> {
       barrierColor: Colors.black.withOpacity(0.1),
       transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
         filter:
-            ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
+        ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
         child: FadeTransition(
           opacity: anim1,
           child: child,
@@ -889,7 +614,7 @@ class _MyHomePageState extends State<MyHomePage> {
       pageBuilder: (context, anim1, anim2) => AlertDialog(
         // actionsAlignment: MainAxisAlignment.spaceBetween,
         actionsPadding:
-            const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
+        const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
         actions: [
           TextButton(
             onPressed: () async {
@@ -913,8 +638,8 @@ class _MyHomePageState extends State<MyHomePage> {
               await DatabaseRepository.instance
                   .deleteItem(a.id!)
                   .then((value) => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Transaction deleted !')),
-                      ));
+                const SnackBar(content: Text('Transaction deleted !')),
+              ));
               setState(() {
                 items = items.where((item) => item.id != a.id).toList();
                 itemsByDate = items.groupedByDay();
@@ -1022,70 +747,38 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Future<String?> openDialogSync() {
-    TextEditingController idController = TextEditingController();
-    return showGeneralDialog<String?>(
-      barrierDismissible: true,
-      barrierLabel: '',
-      // barrierColor: Colors.black38,
-      transitionDuration: Durations.short4,
+  void updateItems() async {
+    await DatabaseRepository.instance.getAllItems().then((value) {
+      setState(() {
+        items = value;
+        itemsByDate = value.groupedByDay();
+      });
+    }).catchError((e) => debugPrint(e.toString()));
+  }
+
+  Future<Item?> openFullScreenDialog({Item? defaultItem}) {
+    titleController.text = '';
+    priceController.text = '';
+    notesController.text = '';
+    dateController.text = '';
+    isChecked = false;
+    return showGeneralDialog(
       context: context,
-      // barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.1),
-      transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
-        filter:
-            ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
-        child: FadeTransition(
-          opacity: anim1,
-          child: child,
-        ),
-      ),
-      pageBuilder: (context, anim1, anim2) => AlertDialog(
-        // actionsAlignment: MainAxisAlignment.spaceBetween,
-        actionsPadding:
-            const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(idController.text);
-            },
-            child: const Text(
-              "Download",
-              style: TextStyle(
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ],
-        elevation: 10.0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.black,
-        // backgroundColor: Colors.amber,
-        title: const Text("Sync"),
-        content: SizedBox(
-          width: 400,
-          // height: 100,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextField(
-                controller: idController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                  labelText: 'Document id',
-                  labelStyle: TextStyle(
-                    fontSize: 14,
-                  ),
-                ),
-                textInputAction: TextInputAction.newline,
-              )
-            ],
-          ),
+      pageBuilder: (context, a, b) => Dialog.fullscreen(
+        child: ItemInputDialog(
+          formkey: _formKey,
+          notesController: notesController,
+          titleController: titleController,
+          priceController: priceController,
+          dateController: dateController,
+          items: items,
+          defaultItem: defaultItem,
         ),
       ),
     );
+  }
+  void initDb() async {
+    // await deleteDatabase();
+    await DatabaseRepository.instance.database;
   }
 }

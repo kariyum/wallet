@@ -140,6 +140,14 @@ extension Transactions on List<Item> {
       .fold(0, (acc, item) => acc + item.price);
   }
 
+  double forecastedExpenses() {
+    final res = isEmpty
+        ? 0.0
+        : map((e) => e.price).reduce((priceA, priceB) => priceA + priceB);
+    return double.parse(
+        ((res * 1000).roundToDouble() / 1000).toStringAsFixed(3));
+  }
+
   double totalCredit() {
     return where((item) => item.price < 0 && item.paid == 1)
         .fold(0, (previousValue, element) => previousValue + element.price);
