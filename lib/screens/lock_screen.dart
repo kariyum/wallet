@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:walletapp/screens/home.dart';
 import 'package:walletapp/services/lock_screen.dart';
 
+import 'package:provider/provider.dart';
+
+import '../AppState/items_model.dart';
+import '../models/item.dart';
+
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
 
@@ -12,6 +17,7 @@ class LockScreen extends StatefulWidget {
 class _LockScreenState extends State<LockScreen> {
   bool _isLocked = false;
   String? _pin;
+
   @override
   void initState() {
     super.initState();
@@ -25,8 +31,13 @@ class _LockScreenState extends State<LockScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_isLocked) {
-      return const MyHomePage();
+      return FutureProvider(
+        create: (context) => ItemsModel.create(),
+        initialData: ItemsModel(itemsArg: []),
+        child: const MyHomePage(),
+      );
     }
+
     return Scaffold(
       appBar: AppBar(),
       body: Column(

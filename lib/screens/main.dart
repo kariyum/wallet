@@ -2,15 +2,20 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:walletapp/models/datetime.dart';
 
+import '../AppState/items_model.dart';
 import '../models/item.dart';
 import '../services/database.dart';
 import '../services/firebase.dart';
 import '../widgets/animated_count.dart';
+import '../widgets/card_info.dart';
 import '../widgets/item_input_dialog.dart';
+
 class Main extends StatefulWidget {
   final ScrollController scrollController;
+
   const Main({
     super.key,
     required this.scrollController,
@@ -21,13 +26,12 @@ class Main extends StatefulWidget {
 }
 
 class MainState extends State<Main> {
-
   @override
   void initState() {
     initDb();
     super.initState();
     // skipLockScreen();
-    updateItems();
+    // updateItems();
     titleController = TextEditingController();
     titleController.text = '';
 
@@ -37,7 +41,6 @@ class MainState extends State<Main> {
     notesController = TextEditingController();
     notesController.text = '';
     super.initState();
-
   }
 
   final firestore = Firebase();
@@ -55,276 +58,122 @@ class MainState extends State<Main> {
   late bool futurePaymentCheckbox;
 
   bool isDialogOpen = false;
+
   @override
   Widget build(BuildContext context) {
     print("REBUILDING MAIN");
-    return SingleChildScrollView(
+    return ListView(
+      shrinkWrap: true,
       controller: widget.scrollController,
-      child: ListView(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          Stack(
+      children: [
+        const CardInfo(),
+        Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: Column(
             children: [
-              Card(
-                margin: const EdgeInsets.all(8),
-                child: SizedBox(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            TapRegion(
-                              onTapInside: (event) {
-                                setState(() {
-                                  showCurrentBalance = !showCurrentBalance;
-                                });
-                                return;
-                              },
-                              // child: AnimatedCount(count: items.availableBalance()),
-                              child: Text(
-                                () {
-                                  if (showCardInfo && showCurrentBalance) {
-                                    return "${items.availableBalance().format()} DNT";
-                                  }
-                                  if (showCardInfo && !showCurrentBalance) {
-                                    return "${items.forecastedExpenses().format()} DNT";
-                                  }
-                                  return "---";
-                                }(),
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            TapRegion(
-                              onTapInside: (event) {
-                                setState(() {
-                                  showCardInfo = !showCardInfo;
-                                });
-                                return;
-                              },
-                              child: showCardInfo
-                                  ? const Icon(Icons.visibility)
-                                  : const Icon(Icons.visibility_off),
-                            )
-                          ],
-                        ),
-                        if (showCurrentBalance)
-                          const Text(
-                            "Available Balance",
-                            style: TextStyle(
-                              fontSize: 14,
-                            ),
-                          )
-                        else
-                          const Text(
-                            "Forecasted Balance",
-                            style: TextStyle(
-                              fontSize: 14,
-                            ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Transactions",
+                        style: TextStyle(fontSize: 21),
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Uploading...')),
+                                );
+                              }
+                              final futureDocumentId = firestore.uploadItems(
+                                  Provider.of<ItemsModel>(context,
+                                          listen: false)
+                                      .items);
+                              futureDocumentId.then((documentId) {
+                                Clipboard.setData(
+                                        ClipboardData(text: documentId))
+                                    .then((_) => ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Document id copied to clipboard!')),
+                                        ));
+                              });
+                            },
+                            icon: const Icon(Icons.upload),
                           ),
-                        const Divider(),
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.red[100],
-                              maxRadius: 16,
-                              child: Icon(
-                                Icons.arrow_downward_rounded,
-                                color: Colors.red[600],
-                              ),
-                            ),
-                            const VerticalDivider(),
-                            Text(
-                              showCardInfo
-                                  ? "${items.totalCredit().format()} DNT"
-                                  : "---",
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.green[100],
-                              maxRadius: 16,
-                              child: Icon(
-                                Icons.arrow_upward_rounded,
-                                color: Colors.green[600],
-                              ),
-                            ),
-                            const VerticalDivider(),
-                            Text(
-                              showCardInfo
-                                  ? "${items.totalDebit().format()} DNT"
-                                  : "---",
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // AnimatedPositioned(
-              //   child: Container(
-              //       decoration: BoxDecoration(
-              //           // color: Color.fromARGB(200, 255, 255, 255),
-              //           borderRadius: new BorderRadius.all(
-              //               Radius.elliptical(10, 10))),
-              //     child: Padding(
-              //       padding: EdgeInsets.all(8.0),
-              //       child: ClipRect(
-              //         child: BackdropFilter(
-              //           filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-              //           child: Text("+ 1000", style: TextStyle(
-              //             color: Colors.green,
-              //             fontSize: 24,
-              //             fontWeight: FontWeight.bold,
-              //           ),),
-              //         ),
-              //       ),
-              //     ),
-              //   ),
-              //   top: 100,
-              //   left: 15,
-              //   duration: Duration(milliseconds: 300),
-              //   curve: Curves.easeOut,
-              // )
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Transactions",
-                          style: TextStyle(fontSize: 21),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              onPressed: () {
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () async {
+                              final futureValue = await openDialogSync();
+                              if (futureValue != null) {
+                                // downloading
+                                final futureData =
+                                    firestore.downloadItems(futureValue);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                        content: Text('Uploading...')),
+                                      content: Text('Downloading...'),
+                                    ),
                                   );
                                 }
-                                final futureDocumentId =
-                                firestore.uploadItems(items);
-                                futureDocumentId.then((documentId) {
-                                  Clipboard.setData(
-                                      ClipboardData(text: documentId))
-                                      .then((_) => ScaffoldMessenger.of(context)
-                                      .showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                            'Document id copied to clipboard!')),
-                                  ));
-                                });
-                              },
-                              icon: const Icon(Icons.upload),
-                            ),
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              onPressed: () async {
-                                final futureValue = await openDialogSync();
-                                if (futureValue != null) {
-                                  // downloading
-                                  final futureData =
-                                  firestore.downloadItems(futureValue);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Downloading...'),
-                                      ),
-                                    );
-                                  }
-                                  // updateItems();
-                                  futureData.then((data) {
-                                    setState(() {
-                                      items = data;
-                                      itemsByDate = data.groupedByDay();
-                                    });
-                                    saveAllItems(data).then((_) => {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content:
-                                          Text('Items saved locally!'),
-                                        ),
-                                      )
-                                    });
+                                // updateItems();
+                                futureData.then((data) {
+                                  setState(() {
+                                    Provider.of<ItemsModel>(context,
+                                            listen: false)
+                                        .set(data);
+                                    //items = data;
+
+                                    //itemsByDate = data.groupedByDay();
                                   });
-                                }
-                              },
-                              icon: const Icon(Icons.download),
-                            )
-                          ],
-                        )
-                      ],
-                    ),
+                                  saveAllItems(data).then((_) => {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content:
+                                                Text('Items saved locally!'),
+                                          ),
+                                        )
+                                      });
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.download),
+                          )
+                        ],
+                      )
+                    ],
                   ),
                 ),
-                ListView.separated(
+              ),
+              Consumer<ItemsModel>(builder: (context, itemsModel, child) {
+                return ListView.separated(
                   // controller: _scrollController,
                   separatorBuilder: (BuildContext context, int index) =>
-                  const SizedBox(
+                      const SizedBox(
                     height: 20,
                   ),
                   // reverse: true,
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: itemsByDate.keys.length,
-                  itemBuilder: itemBuilderByDate,
-                ),
-              ],
-            ),
+                  itemCount: itemsModel.itemsByDate.keys.length,
+                  itemBuilder: (BuildContext context, int idx) => itemBuilderByDate(context, idx, itemsModel.itemsByDate),
+                );
+              }),
+            ],
           ),
-
-          // Divider(
-          //   indent: 40,
-          //   endIndent: 40,
-          // ),
-          // ListView.separated(
-          //   // controller: _scrollController,
-          //   separatorBuilder: (BuildContext context, int index) =>
-          //       const Divider(),
-          //   // reverse: true,
-          //   scrollDirection: Axis.vertical,
-          //   shrinkWrap: true,
-          //   physics: NeverScrollableScrollPhysics(),
-          //   itemCount: items.length,
-          //   itemBuilder: itemBuilderSimple,
-          // ),
-          // ListView.builder(itemBuilder: itemBuilderDate, itemCount: itemsByDate.length,)
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -340,7 +189,7 @@ class MainState extends State<Main> {
       barrierColor: Colors.black.withOpacity(0.1),
       transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
         filter:
-        ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
+            ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
         child: FadeTransition(
           opacity: anim1,
           child: child,
@@ -349,7 +198,7 @@ class MainState extends State<Main> {
       pageBuilder: (context, anim1, anim2) => AlertDialog(
         // actionsAlignment: MainAxisAlignment.spaceBetween,
         actionsPadding:
-        const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
+            const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
         actions: [
           TextButton(
             onPressed: () {
@@ -395,7 +244,8 @@ class MainState extends State<Main> {
     );
   }
 
-  Widget? itemBuilderByDate(BuildContext context, int idx) {
+  Widget? itemBuilderByDate(BuildContext context, int idx, Map<DateTime, List<Item>> itemsByDate) {
+    debugPrint("ItemBuilderBydate");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -412,11 +262,6 @@ class MainState extends State<Main> {
           endIndent: 10,
         ),
         ListView.builder(
-          // separatorBuilder: (context, index) => Divider(
-          //  indent: 20,
-          //  endIndent: 20,
-          //  height: 0,
-          // ),
           itemCount: itemsByDate.values.elementAt(idx).length,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -425,15 +270,6 @@ class MainState extends State<Main> {
                 context, j, itemsByDate.values.elementAt(idx));
           },
         ),
-        // for (var elementIndex = 0;
-        //     elementIndex < itemsByDate.values.elementAt(idx).length;
-        //     elementIndex += 1)
-        //   ListTile(
-        //     title: Text(itemsByDate.values
-        //         .elementAt(idx)
-        //         .elementAt(elementIndex)
-        //         .title),
-        //   )
       ],
     );
   }
@@ -447,7 +283,7 @@ class MainState extends State<Main> {
     final currentItem = items.elementAt(idx);
     return ListTile(
       visualDensity:
-      const VisualDensity(vertical: VisualDensity.minimumDensity),
+          const VisualDensity(vertical: VisualDensity.minimumDensity),
       onLongPress: () async {
         isSelected = idx;
         await openDialogItem(items[idx]);
@@ -491,107 +327,6 @@ class MainState extends State<Main> {
         ),
       ),
     );
-    // Dismissible(
-    //   key: Key(currentItem.id.toString()),
-    // onDismissed: (direction) {
-    //   if (direction == DismissDirection.endToStart) {
-    //     // DatabaseRepository.instance.deleteItem()
-    //   }
-    // },
-    // secondaryBackground: Container(
-    //   color: Colors.red[400],
-    //   child: const Padding(
-    //     padding: EdgeInsets.all(16.0),
-    //     child: Row(
-    //       mainAxisAlignment: MainAxisAlignment.end,
-    //       children: [
-    //         Text(
-    //           "Delete",
-    //           style: TextStyle(
-    //             color: Colors.white,
-    //             fontSize: 21,
-    //             fontWeight: FontWeight.bold,
-    //           ),
-    //         ),
-    //         SizedBox(
-    //           width: 20,
-    //         ),
-    //         Icon(
-    //           Icons.delete,
-    //           color: Colors.white,
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // ),
-    // background: Container(
-    //   color: Colors.green[400],
-    //   child: const Padding(
-    //     padding: EdgeInsets.all(16.0),
-    //     child: Row(
-    //       children: [
-    //         Icon(
-    //           Icons.edit,
-    //           color: Colors.white,
-    //         ),
-    //         SizedBox(
-    //           width: 20,
-    //         ),
-    //         Text(
-    //           "Edit",
-    //           style: TextStyle(
-    //               color: Colors.white,
-    //               fontSize: 21,
-    //               fontWeight: FontWeight.bold),
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // ),
-    // confirmDismiss: (direction) async {
-    //   return false; // direction == DismissDirection.endToStart;
-    // },
-    //   child: ListTile(
-    //     onLongPress: () async {
-    //       isSelected = idx;
-    //       final x = await openDialogItem(items[idx]);
-    //       isSelected = -1;
-    //     },
-    //     leading: Icon(
-    //       Icons.wallet,
-    //       color: () {
-    //         if (currentItem.isCredit() && currentItem.paid == 1) {
-    //           return Colors.black54;
-    //         }
-    //         return const Color.fromARGB(255, 66, 133, 244);
-    //       }(), //Theme.of(context).colorScheme.onSurfaceVariant
-    //       size: 26,
-    //     ),
-    //     subtitle: Text(
-    //         "${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
-    //         style: TextStyle(
-    //           fontSize: 14,
-    //           color: Colors.grey[600],
-    //         )),
-    //     trailing: Text(
-    //       '${currentItem.price.format()} DNT',
-    //       style: TextStyle(
-    //         fontSize: 18,
-    //         color: currentItem.paid == 1
-    //             ? currentItem.isCredit()
-    //                 ? const Color.fromARGB(255, 219, 68, 55)
-    //                 : const Color.fromARGB(255, 15, 157, 88)
-    //             : Colors.black54,
-    //       ),
-    //     ),
-    //     title: Text(
-    //       currentItem.title,
-    //       style: TextStyle(
-    //         fontSize: 18,
-    //       ),
-    //     ),
-    //   ),
-    // );
   }
 
   Future<Item?> openDialogItem(Item a) {
@@ -605,7 +340,7 @@ class MainState extends State<Main> {
       barrierColor: Colors.black.withOpacity(0.1),
       transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
         filter:
-        ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
+            ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
         child: FadeTransition(
           opacity: anim1,
           child: child,
@@ -614,7 +349,7 @@ class MainState extends State<Main> {
       pageBuilder: (context, anim1, anim2) => AlertDialog(
         // actionsAlignment: MainAxisAlignment.spaceBetween,
         actionsPadding:
-        const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
+            const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
         actions: [
           TextButton(
             onPressed: () async {
@@ -638,8 +373,8 @@ class MainState extends State<Main> {
               await DatabaseRepository.instance
                   .deleteItem(a.id!)
                   .then((value) => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Transaction deleted !')),
-              ));
+                        const SnackBar(content: Text('Transaction deleted !')),
+                      ));
               setState(() {
                 items = items.where((item) => item.id != a.id).toList();
                 itemsByDate = items.groupedByDay();
@@ -777,6 +512,7 @@ class MainState extends State<Main> {
       ),
     );
   }
+
   void initDb() async {
     // await deleteDatabase();
     await DatabaseRepository.instance.database;

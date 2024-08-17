@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:walletapp/services/utils.dart';
-import 'package:walletapp/widgets/chart.dart';
 
 class AnalyticsPage extends StatefulWidget {
   AnalyticsPage({
@@ -37,26 +36,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               const Padding(
                 padding: EdgeInsets.only(left: 16.0, top: 16.0),
                 child: Text(
-                  "Overall expenses",
-                  style: TextStyle(fontSize: 21),
-                ),
-              ),
-              SizedBox(
-                height: 200,
-                child: Padding(
-                  padding: const EdgeInsets.all(18.0),
-                  child: SimpleTimeSeriesChart.fromItemsGrouped(
-                      widget.itemsByDate),
-                ),
-              ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(left: 16.0, top: 16.0),
-                child: Text(
                   "Monthly expenses",
                   style: TextStyle(fontSize: 21),
                 ),
@@ -77,9 +56,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                       .map((date) => date.day);
                   final fromDate = allDates.fold(31, (a, b) => a < b ? a : b);
                   final endDate = allDates.fold(0, (a, b) => a < b ? b : a);
-                  return Card(
-                    elevation: 0,
-                    margin: const EdgeInsets.all(8.0),
+                  debugPrint("${ThemeData().colorScheme}");
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
                         Row(

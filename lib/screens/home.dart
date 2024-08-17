@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:walletapp/AppState/items_model.dart';
 import 'package:walletapp/models/datetime.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:walletapp/screens/analytics.dart';
@@ -205,8 +207,13 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       body: [
-        // homePageWidget(context),
         Main(scrollController: _scrollController),
+        // homePageWidget(context),
+        // FutureProvider<ItemsModel>(
+        //   create: (_) => ItemsModel.create(),
+        //   initialData: ItemsModel(itemsArg: []),
+        //   builder: (context, child) => Main(scrollController: _scrollController),
+        // ),
         AnalyticsPage(itemsByDate: items.groupedByDay()),
         Text("Page 3"),
       ][_currentPageIndex],
