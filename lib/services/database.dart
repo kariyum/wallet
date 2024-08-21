@@ -80,6 +80,7 @@ class DatabaseRepository {
   }
 
   Future<void> itemSwitchPaid({required int id, required int isPaid}) async {
+    debugPrint("Switching paid");
     try {
       final db = await instance.database;
       // print("Inserting item $item");

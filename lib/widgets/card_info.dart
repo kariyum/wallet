@@ -2,18 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walletapp/models/item.dart';
 
-import '../AppState/items_model.dart';
+import '../app_state/card_info.dart';
+import '../app_state/items_model.dart';
+import 'animated_count.dart';
 
-class CardInfo extends StatefulWidget {
-  const CardInfo({super.key});
+class CardInfo extends StatelessWidget {
+  const CardInfo({
+    super.key,
+  });
 
-  @override
-  State<CardInfo> createState() => _CardInfoState();
-}
+  double getBalance(CardInfoModel cardInfoModel, ItemsModel itemsModel) {
+    if (cardInfoModel.showCurrentBalance) {
+      return itemsModel.items.availableBalance();
+    }
+    return itemsModel.items.forecastedExpenses();
+  }
 
-class _CardInfoState extends State<CardInfo> {
-  bool showCurrentBalance = true;
-  bool showCardInfo = false;
+  void onToggleTotalExpenses(CardInfoModel cardInfoModel) {
+    cardInfoModel.switchShowCurrentBalance();
+  }
+
+  void onToggleVisibility(CardInfoModel cardInfoModel) {
+    cardInfoModel.switchShowCardInfo();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,54 +32,46 @@ class _CardInfoState extends State<CardInfo> {
       children: [
         Card(
           margin: const EdgeInsets.all(8),
-          child: SizedBox(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Consumer<ItemsModel>(
-                builder: (context, itemsModel, child) => Column(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Consumer2<ItemsModel, CardInfoModel>(
+              builder: (context, itemsModel, cardInfoModel, child) {
+                final items = itemsModel.items;
+                final dailyAverageExpense = items.averageExpense();
+                final dailyAverageIncome = items.averageIncome();
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TapRegion(
-                          onTapInside: (event) {
-                            setState(() {
-                              showCurrentBalance = !showCurrentBalance;
-                            });
-                            return;
-                          },
-                          // child: AnimatedCount(count: items.availableBalance()),
-                          child: Text(
-                            () {
-                              if (showCardInfo && showCurrentBalance) {
-                                return "${itemsModel.items.availableBalance().format()} DNT";
-                              }
-                              if (showCardInfo && !showCurrentBalance) {
-                                return "${itemsModel.items.forecastedExpenses().format()} DNT";
-                              }
-                              return "---";
-                            }(),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          onTapInside: (PointerDownEvent event) =>
+                              onToggleTotalExpenses(cardInfoModel),
+                          child: () {
+                            if (!cardInfoModel.showCardInfo) {
+                              return const Text(
+                                "---",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            }
+                            return AnimatedCount(
+                                count: getBalance(cardInfoModel, itemsModel));
+                          }(),
                         ),
                         TapRegion(
-                          onTapInside: (event) {
-                            setState(() {
-                              showCardInfo = !showCardInfo;
-                            });
-                            return;
-                          },
-                          child: showCardInfo
+                          onTapInside: (event) =>
+                              onToggleVisibility(cardInfoModel),
+                          child: cardInfoModel.showCardInfo
                               ? const Icon(Icons.visibility)
                               : const Icon(Icons.visibility_off),
                         )
                       ],
                     ),
-                    if (showCurrentBalance)
+                    if (cardInfoModel.showCurrentBalance)
                       const Text(
                         "Available Balance",
                         style: TextStyle(
@@ -95,8 +98,8 @@ class _CardInfoState extends State<CardInfo> {
                         ),
                         const VerticalDivider(),
                         Text(
-                          showCardInfo
-                              ? "${itemsModel.items.totalCredit().format()} DNT"
+                          cardInfoModel.showCardInfo
+                              ? "${dailyAverageExpense.format()} DNT"
                               : "---",
                           style: const TextStyle(
                             fontSize: 20,
@@ -120,8 +123,8 @@ class _CardInfoState extends State<CardInfo> {
                         ),
                         const VerticalDivider(),
                         Text(
-                          showCardInfo
-                              ? "${itemsModel.items.totalDebit().format()} DNT"
+                          cardInfoModel.showCardInfo
+                              ? "${dailyAverageIncome.format()} DNT"
                               : "---",
                           style: const TextStyle(
                             fontSize: 20,
@@ -131,8 +134,8 @@ class _CardInfoState extends State<CardInfo> {
                       ],
                     ),
                   ],
-                ),
-              ),
+                );
+              },
             ),
           ),
         ),

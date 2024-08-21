@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:walletapp/AppState/items_model.dart';
+import 'package:walletapp/app_state/items_model.dart';
 import 'package:walletapp/models/datetime.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:walletapp/screens/analytics.dart';
@@ -31,14 +31,14 @@ class _MyHomePageState extends State<MyHomePage> {
   late bool futurePaymentCheckbox;
 
   bool isDialogOpen = false;
-  final firestore = Firebase();
+  final Firebase firebase = Firebase();
 
   @override
   void initState() {
     initDb();
     super.initState();
     // skipLockScreen();
-    updateItems();
+    // updateItems();
     titleController = TextEditingController();
     titleController.text = '';
 
@@ -208,13 +208,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: [
         Main(scrollController: _scrollController),
-        // homePageWidget(context),
-        // FutureProvider<ItemsModel>(
-        //   create: (_) => ItemsModel.create(),
-        //   initialData: ItemsModel(itemsArg: []),
-        //   builder: (context, child) => Main(scrollController: _scrollController),
-        // ),
-        AnalyticsPage(itemsByDate: items.groupedByDay()),
+        const AnalyticsPage(),
         Text("Page 3"),
       ][_currentPageIndex],
       bottomNavigationBar: NavigationBar(
@@ -248,11 +242,16 @@ class _MyHomePageState extends State<MyHomePage> {
         controller: _scrollController,
         onPressed: () async {
           final x = await openFullScreenDialog();
+
           if (x == null) {
             debugPrint(x.toString());
           } else {
-            await x.persist();
-            updateItems();
+            // await x.persist();
+            if (context.mounted) {
+              debugPrint("ADDING ITEM");
+              Provider.of<ItemsModel>(context, listen: false).add(x);
+            }
+            // updateItems();
           }
         },
         currentPageIndex: _currentPageIndex,
@@ -460,7 +459,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   );
                                 }
                                 final futureDocumentId =
-                                    firestore.uploadItems(items);
+                                    firebase.uploadItems(items);
                                 futureDocumentId.then((documentId) {
                                   Clipboard.setData(
                                           ClipboardData(text: documentId))
@@ -481,7 +480,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 if (futureValue != null) {
                                   // downloading
                                   final futureData =
-                                      firestore.downloadItems(futureValue);
+                                      firebase.downloadItems(futureValue);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(

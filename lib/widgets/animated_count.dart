@@ -42,11 +42,11 @@ class _HomeState extends State<Home> {
 class AnimatedCount extends ImplicitlyAnimatedWidget {
   final double count;
   const AnimatedCount({
-    Key? key,
+    super.key,
     required this.count,
-    Duration duration = const Duration(milliseconds: 700),
-    Curve curve = Curves.easeInOut,
-  }) : super(duration: duration, curve: curve, key: key);
+    super.duration = const Duration(milliseconds: 500),
+    super.curve = Curves.easeOutCubic,
+  });
 
   @override
   ImplicitlyAnimatedWidgetState<ImplicitlyAnimatedWidget> createState() {
@@ -74,7 +74,7 @@ class _AnimatedCountState extends AnimatedWidgetBaseState<AnimatedCount> {
 
   @override
   Widget build(BuildContext context) {
-    return Text(_double.evaluate(animation).format(), style: const TextStyle(
+    return Text("${_double.evaluate(animation).format()} DNT", style: const TextStyle(
       fontSize: 24,
       fontWeight: FontWeight.bold,
     ),);

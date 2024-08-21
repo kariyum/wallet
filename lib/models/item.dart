@@ -14,9 +14,9 @@ class Item {
   final int? month;
   final int? year;
   final String? notes;
-  final int? paid;
+  int? paid;
 
-  const Item({
+  Item({
     this.id,
     this.day,
     this.hour,
@@ -158,18 +158,37 @@ extension Transactions on List<Item> {
         .fold(0, (previousValue, item) => previousValue + item.price);
   }
 
+  double averageExpense() {
+    if (length == 0) return 0;
+    return where((item) => item.isCredit())
+        .map((item) => item.price)
+        .fold(0.0, (a, b) => a + b) / length;
+  }
+
+  double averageIncome() {
+    if (length == 0) return 0;
+    return where((item) => !item.isCredit())
+        .map((item) => item.price)
+        .fold(0.0, (a, b) => a + b) / length;
+  }
+
   Map<DateTime, List<Item>> groupedByDay() {
     DateTime reset(int timestamp) {
       final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
       return DateTime(date.year, date.month, date.day);
-
     }
-    return fold(
+
+    final Map<DateTime, List<Item>> mapResult = fold(
         {},
         (map, item) => map
           ..putIfAbsent(
               reset(item.timestamp),
-              () => <Item>[]).add(item));
+              () => <Item>[]
+          ).add(item));
+
+    return mapResult.map((date, items) => MapEntry(date,
+        items..sort((a, b) => b.timestamp - a.timestamp))
+    );
   }
 
   Map<(int, int), List<Item>> groupedByMonth() {
@@ -235,5 +254,10 @@ extension ExpenseFormatting on double {
 extension Statistics on Map<DateTime, List<Item>> {
   List<Item> flatten() {
     return values.fold(<Item>[], (previousValue, element) => previousValue + element);
+  }
+
+  double dailyAverageExpense() {
+    var x = map((DateTime k, List<Item> value) => MapEntry(k, value.totalCredit()));
+    return 0.0;
   }
 }

@@ -1,15 +1,14 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:walletapp/models/datetime.dart';
+import 'package:walletapp/widgets/transactions_header.dart';
 
-import '../AppState/items_model.dart';
+import '../app_state/items_model.dart';
 import '../models/item.dart';
 import '../services/database.dart';
 import '../services/firebase.dart';
-import '../widgets/animated_count.dart';
 import '../widgets/card_info.dart';
 import '../widgets/item_input_dialog.dart';
 
@@ -43,12 +42,12 @@ class MainState extends State<Main> {
     super.initState();
   }
 
-  final firestore = Firebase();
+  final firebase = Firebase();
   bool isChecked = false;
   final _formKey = GlobalKey<FormState>();
   int isSelected = -1;
   bool showCurrentBalance = true;
-  bool showCardInfo = false;
+  bool showCardInfo = true;
   Map<DateTime, List<Item>> itemsByDate = {};
   List<Item> items = [];
   late TextEditingController titleController = TextEditingController();
@@ -61,120 +60,28 @@ class MainState extends State<Main> {
 
   @override
   Widget build(BuildContext context) {
-    print("REBUILDING MAIN");
-    return ListView(
-      shrinkWrap: true,
-      controller: widget.scrollController,
-      children: [
-        const CardInfo(),
-        Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Transactions",
-                        style: TextStyle(fontSize: 21),
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            onPressed: () {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Uploading...')),
-                                );
-                              }
-                              final futureDocumentId = firestore.uploadItems(
-                                  Provider.of<ItemsModel>(context,
-                                          listen: false)
-                                      .items);
-                              futureDocumentId.then((documentId) {
-                                Clipboard.setData(
-                                        ClipboardData(text: documentId))
-                                    .then((_) => ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Document id copied to clipboard!')),
-                                        ));
-                              });
-                            },
-                            icon: const Icon(Icons.upload),
-                          ),
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            onPressed: () async {
-                              final futureValue = await openDialogSync();
-                              if (futureValue != null) {
-                                // downloading
-                                final futureData =
-                                    firestore.downloadItems(futureValue);
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Downloading...'),
-                                    ),
-                                  );
-                                }
-                                // updateItems();
-                                futureData.then((data) {
-                                  setState(() {
-                                    Provider.of<ItemsModel>(context,
-                                            listen: false)
-                                        .set(data);
-                                    //items = data;
-
-                                    //itemsByDate = data.groupedByDay();
-                                  });
-                                  saveAllItems(data).then((_) => {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content:
-                                                Text('Items saved locally!'),
-                                          ),
-                                        )
-                                      });
-                                });
-                              }
-                            },
-                            icon: const Icon(Icons.download),
-                          )
-                        ],
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              Consumer<ItemsModel>(builder: (context, itemsModel, child) {
-                return ListView.separated(
-                  // controller: _scrollController,
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const SizedBox(
-                    height: 20,
-                  ),
-                  // reverse: true,
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: itemsModel.itemsByDate.keys.length,
-                  itemBuilder: (BuildContext context, int idx) => itemBuilderByDate(context, idx, itemsModel.itemsByDate),
-                );
-              }),
-            ],
-          ),
-        ),
-      ],
-    );
+    debugPrint("REBUILDING MAIN");
+    final topWidgets = [
+      const CardInfo(),
+      TransactionsHeader(firebase: firebase),
+    ];
+    return Consumer<ItemsModel>(builder: (context, itemsModel, child) {
+      debugPrint("REBUILDING MAIN WITH ${itemsModel.itemsByDate.length}");
+      return ListView.separated(
+          controller: widget.scrollController,
+          separatorBuilder: (BuildContext context, int idx) {
+            if (idx < topWidgets.length) return const SizedBox();
+            return const SizedBox(
+              height: 20,
+            );
+          },
+          itemCount: topWidgets.length + itemsModel.itemsByDate.keys.length,
+          itemBuilder: (BuildContext context, int idx) {
+            if (idx < topWidgets.length) return topWidgets[idx];
+            return itemBuilderByDate(
+                context, idx - topWidgets.length, itemsModel.itemsByDate);
+          });
+    });
   }
 
   Future<String?> openDialogSync() {
@@ -217,34 +124,31 @@ class MainState extends State<Main> {
         shadowColor: Colors.black,
         // backgroundColor: Colors.amber,
         title: const Text("Sync"),
-        content: SizedBox(
-          width: 400,
-          // height: 100,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextField(
-                controller: idController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                  labelText: 'Document id',
-                  labelStyle: TextStyle(
-                    fontSize: 14,
-                  ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextField(
+              controller: idController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                alignLabelWithHint: true,
+                labelText: 'Document id',
+                labelStyle: TextStyle(
+                  fontSize: 14,
                 ),
-                textInputAction: TextInputAction.newline,
-              )
-            ],
-          ),
+              ),
+              textInputAction: TextInputAction.newline,
+            )
+          ],
         ),
       ),
     );
   }
 
-  Widget? itemBuilderByDate(BuildContext context, int idx, Map<DateTime, List<Item>> itemsByDate) {
+  Widget itemBuilderByDate(
+      BuildContext context, int idx, Map<DateTime, List<Item>> itemsByDate) {
     debugPrint("ItemBuilderBydate");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +157,7 @@ class MainState extends State<Main> {
           padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
           child: Text(
             itemsByDate.keys.elementAt(idx).formatListTile(),
-            style: TextStyle(fontSize: 18),
+            style: const TextStyle(fontSize: 18),
           ),
         ),
         const Divider(
@@ -278,15 +182,14 @@ class MainState extends State<Main> {
     return DatabaseRepository.instance.saveAllItems(items);
   }
 
-  Widget? itemBuilderByDateSub(
-      BuildContext context, int idx, List<Item> items) {
+  Widget itemBuilderByDateSub(BuildContext context, int idx, List<Item> items) {
     final currentItem = items.elementAt(idx);
     return ListTile(
       visualDensity:
           const VisualDensity(vertical: VisualDensity.minimumDensity),
       onLongPress: () async {
         isSelected = idx;
-        await openDialogItem(items[idx]);
+        await openDialogItem(context.read<ItemsModel>(), items[idx]);
         isSelected = -1;
       },
       leading: Icon(
@@ -329,7 +232,7 @@ class MainState extends State<Main> {
     );
   }
 
-  Future<Item?> openDialogItem(Item a) {
+  Future<Item?> openDialogItem(ItemsModel itemsModel, Item a) {
     return showGeneralDialog(
       barrierDismissible: true,
       barrierLabel: '',
@@ -351,36 +254,33 @@ class MainState extends State<Main> {
         actionsPadding:
             const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
         actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop(null);
-              if (a.isCredit()) {
-                await a.itemSwitchPaid().then((value) {
-                  updateItems();
-                });
-              }
-              return;
-            },
-            child: const Text(
-              "Paid",
-              style: TextStyle(
-                fontSize: 18.0,
+          if (a.isCredit())
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(null);
+                if (a.isCredit()) {
+                  itemsModel.switchPaid(a.id!);
+                }
+                return;
+              },
+              child: const Text(
+                "Paid",
+                style: TextStyle(
+                  fontSize: 18.0,
+                ),
               ),
             ),
-          ),
           TextButton(
             onPressed: () async {
-              await DatabaseRepository.instance
-                  .deleteItem(a.id!)
-                  .then((value) => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Transaction deleted !')),
-                      ));
-              setState(() {
-                items = items.where((item) => item.id != a.id).toList();
-                itemsByDate = items.groupedByDay();
+              itemsModel.removeItem(a);
+              await DatabaseRepository.instance.deleteItem(a.id!);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Transaction deleted !')),
+                );
                 isSelected = -1;
                 Navigator.of(context).pop(null);
-              });
+              }
             },
             child: const Text("Delete",
                 style: TextStyle(
@@ -392,14 +292,11 @@ class MainState extends State<Main> {
               Navigator.of(context).pop(null);
               final itemToInsert = await openFullScreenDialog(defaultItem: a);
               if (itemToInsert != null) {
-                await itemToInsert.persist();
-                setState(() {
-                  updateItems();
-                });
+                itemsModel.updateItem(itemToInsert);
               }
               return;
             },
-            child: Text(
+            child: const Text(
               "Edit",
               style: TextStyle(
                 fontSize: 18.0,

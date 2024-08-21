@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:walletapp/app_state/card_info.dart';
 import 'package:walletapp/screens/home.dart';
 import 'package:walletapp/services/lock_screen.dart';
 
 import 'package:provider/provider.dart';
 
-import '../AppState/items_model.dart';
+import '../app_state/items_model.dart';
 import '../models/item.dart';
 
 class LockScreen extends StatefulWidget {
@@ -31,9 +32,11 @@ class _LockScreenState extends State<LockScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_isLocked) {
-      return FutureProvider(
-        create: (context) => ItemsModel.create(),
-        initialData: ItemsModel(itemsArg: []),
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => ItemsModel(itemsArg: [])),
+          ChangeNotifierProvider(create: (context) => CardInfoModel(true, true)),
+        ],
         child: const MyHomePage(),
       );
     }

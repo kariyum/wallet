@@ -6,6 +6,7 @@ class Firebase {
   static final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   Future<String> uploadItems(List<Item> items) async {
+    print("UPLOADING ${items.length} items");
     final itemsCollection = firestore.collection("items");
     final data = {
       "items": items.map((item) => item.toMap()),
