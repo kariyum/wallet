@@ -49,7 +49,6 @@ class MainState extends State<Main> {
   bool showCurrentBalance = true;
   bool showCardInfo = true;
   Map<DateTime, List<Item>> itemsByDate = {};
-  List<Item> items = [];
   late TextEditingController titleController = TextEditingController();
   late TextEditingController priceController;
   late TextEditingController notesController;
@@ -381,10 +380,6 @@ class MainState extends State<Main> {
 
   void updateItems() async {
     await DatabaseRepository.instance.getAllItems().then((value) {
-      setState(() {
-        items = value;
-        itemsByDate = value.groupedByDay();
-      });
     }).catchError((e) => debugPrint(e.toString()));
   }
 
@@ -403,7 +398,7 @@ class MainState extends State<Main> {
           titleController: titleController,
           priceController: priceController,
           dateController: dateController,
-          items: items,
+          items: context.read<ItemsModel>().items,
           defaultItem: defaultItem,
         ),
       ),

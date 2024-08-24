@@ -83,15 +83,17 @@ class ItemsModel extends ChangeNotifier {
   }
 
   void add(Item item) {
-    insertItem(item: item).then((_) => _updateItems()).catchError((_) => (),
-        test: (error) {
+    insertItem(item: item).then((_) async {
+      List<Item> items = await fetchItems();
+      debugPrint("Updating items with ${items.length}");
+      itemsArg = items;
+      _itemsByDate = itemsArg.groupedByDay();
+      _itemsByMonth = _itemsByDate.flatten().groupedByMonth();
+      notifyListeners();
+    }).catchError((_) => (), test: (error) {
       debugPrint("insert item failed: $error");
       return false;
     });
-    itemsArg.add(Item.fromJson(item.toMap()));
-    _itemsByDate = itemsArg.groupedByDay();
-    _itemsByMonth = _itemsByDate.flatten().groupedByMonth();
-    notifyListeners();
   }
 
   void set(List<Item> items) {

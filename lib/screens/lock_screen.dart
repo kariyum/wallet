@@ -37,7 +37,7 @@ class _LockScreenState extends State<LockScreen> {
           ChangeNotifierProvider(create: (context) => ItemsModel(itemsArg: [])),
           ChangeNotifierProvider(create: (context) => CardInfoModel(true, true)),
         ],
-        child: const MyHomePage(),
+        builder: (context, child) => const MyHomePage(),
       );
     }
 

@@ -120,6 +120,8 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         systemOverlayStyle: const SystemUiOverlayStyle(
           systemNavigationBarColor: Colors.transparent,
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
           // systemNavigationBarDividerColor: ElevationOverlay.applySurfaceTint(Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceTint, 3.0)
         ),
         // backgroundColor: Theme.of(context).colorScheme.primary,
@@ -861,14 +863,14 @@ class _MyHomePageState extends State<MyHomePage> {
     isChecked = false;
     return showGeneralDialog(
       context: context,
-      pageBuilder: (context, a, b) => Dialog.fullscreen(
+      pageBuilder: (ctx, a, b) => Dialog.fullscreen(
         child: ItemInputDialog(
           formkey: _formKey,
           notesController: notesController,
           titleController: titleController,
           priceController: priceController,
           dateController: dateController,
-          items: items,
+          items: context.read<ItemsModel>().items,
           defaultItem: defaultItem,
         ),
       ),
@@ -945,7 +947,7 @@ class _MyHomePageState extends State<MyHomePage> {
               }
               return;
             },
-            child: Text(
+            child: const Text(
               "Edit",
               style: TextStyle(
                 fontSize: 18.0,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
+import 'package:walletapp/app_state/items_model.dart';
 import 'package:walletapp/models/item.dart';
 
 import 'custom_checkbox.dart';
@@ -83,7 +85,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     );
   }
 
-  Widget itemInputTitle(
+  Widget titleInputField(
       List<Item> items, TextEditingController titleController) {
     return Padding(
       padding: const EdgeInsets.only(left: 7.0, right: 8.0),
@@ -133,11 +135,11 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
           },
           displayStringForOption: (option) => option,
           optionsBuilder: (textEditingValue) {
-            final x = items.map((e) => e.title).toList();
+            final x = items.map((e) => e.title).toSet();
             if (textEditingValue.text == '') {
               return const Iterable<String>.empty();
             } else {
-              return x.toSet().where((e) => e
+              return x.where((e) => e
                   .toLowerCase()
                   .startsWith(textEditingValue.text.toLowerCase()));
             }
@@ -171,6 +173,10 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                 border: OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.next,
+              onFieldSubmitted: (value) {
+                fieldFocusNode.unfocus();
+                FocusScope.of(context).requestFocus(priceInputFieldFocusNode);
+              },
             );
           },
         ),
@@ -178,6 +184,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     );
   }
 
+  final priceInputFieldFocusNode = FocusNode();
   Widget priceInputField(
       GlobalKey<FormState> formKey,
       TextEditingController priceController,
@@ -186,6 +193,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
     return Padding(
       padding: const EdgeInsets.only(left: 8.0, right: 8.0),
       child: TextFormField(
+        focusNode: priceInputFieldFocusNode,
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Please enter a number';
@@ -288,7 +296,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  itemInputTitle(items, titleController),
+                  titleInputField(items, titleController),
                   const Padding(padding: EdgeInsets.fromLTRB(0, 8.0, 0, 8.0)),
                   priceInputField(formKey, priceController, titleController,
                       notesController),
@@ -305,7 +313,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                       },
                     ),
                   ),
-                  if (widget.defaultItem != null)
+                  // if (widget.defaultItem != null)
                     Row(
                       children: [
                         Flexible(
@@ -441,7 +449,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
       fit: FlexFit.tight,
       child: TextButton(
         style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             const RoundedRectangleBorder(
               borderRadius: BorderRadius.zero,
             ),
@@ -483,7 +491,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
       fit: FlexFit.tight,
       child: TextButton(
         style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             const RoundedRectangleBorder(
               borderRadius: BorderRadius.zero,
             ),
