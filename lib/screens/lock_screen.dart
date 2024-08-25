@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletapp/app_state/appbar_progress_indicator.dart';
 import 'package:walletapp/app_state/card_info.dart';
 import 'package:walletapp/screens/home.dart';
 import 'package:walletapp/services/lock_screen.dart';
@@ -36,6 +37,7 @@ class _LockScreenState extends State<LockScreen> {
         providers: [
           ChangeNotifierProvider(create: (context) => ItemsModel(itemsArg: [])),
           ChangeNotifierProvider(create: (context) => CardInfoModel(true, true)),
+          ChangeNotifierProvider(create: (context) => AppbarProgressIndicator()),
         ],
         builder: (context, child) => const MyHomePage(),
       );

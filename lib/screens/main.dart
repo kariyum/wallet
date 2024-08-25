@@ -122,7 +122,7 @@ class MainState extends State<Main> {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black,
         // backgroundColor: Colors.amber,
-        title: const Text("Sync"),
+        title: const Text("Download data"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

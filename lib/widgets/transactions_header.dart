@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:walletapp/app_state/appbar_progress_indicator.dart';
 
 import '../app_state/items_model.dart';
 import '../models/item.dart';
@@ -32,14 +33,20 @@ class TransactionsHeader extends StatelessWidget {
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   onPressed: () async {
-                    await onUpload(context);
+                    await onUpload(
+                      context,
+                      context.read<AppbarProgressIndicator>(),
+                    );
                   },
                   icon: const Icon(Icons.upload),
                 ),
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   onPressed: () async {
-                    await onDownload(context);
+                    await onDownload(
+                      context,
+                      context.read<AppbarProgressIndicator>(),
+                    );
                   },
                   icon: const Icon(Icons.download),
                 )
@@ -118,18 +125,14 @@ class TransactionsHeader extends StatelessWidget {
     return DatabaseRepository.instance.saveAllItems(items);
   }
 
-  Future<void> onUpload(BuildContext context) async {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading...')),
-      );
-    }
+  Future<void> onUpload(
+      BuildContext context, AppbarProgressIndicator loadingIndicator) async {
+    loadingIndicator.start();
     try {
       final documentId = await firebase
-          .uploadItems(Provider
-          .of<ItemsModel>(context, listen: false)
-          .items);
+          .uploadItems(Provider.of<ItemsModel>(context, listen: false).items);
       await Clipboard.setData(ClipboardData(text: documentId));
+      loadingIndicator.stop();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -139,6 +142,7 @@ class TransactionsHeader extends StatelessWidget {
       }
     } catch (exception) {
       debugPrint("Uploading failed reason ${exception.toString()}");
+      loadingIndicator.stop();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -149,21 +153,19 @@ class TransactionsHeader extends StatelessWidget {
     }
   }
 
-  Future<void> onDownload(BuildContext context) async {
+  Future<void> onDownload(
+      BuildContext context, AppbarProgressIndicator loadingIndicator) async {
     final futureValue = await openDialogSync(context);
     if (futureValue != null) {
       // downloading
       final futureData = firebase.downloadItems(futureValue);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Downloading...'),
-          ),
-        );
-      }
+      loadingIndicator.start();
       final data = await futureData;
-      if (context.mounted) Provider.of<ItemsModel>(context, listen: false).set(data);
+      if (context.mounted) {
+        Provider.of<ItemsModel>(context, listen: false).set(data);
+      }
       await saveAllItems(data);
+      loadingIndicator.stop();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

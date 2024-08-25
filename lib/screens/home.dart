@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:walletapp/app_state/appbar_progress_indicator.dart';
 import 'package:walletapp/app_state/items_model.dart';
 import 'package:walletapp/models/datetime.dart';
 import 'package:walletapp/models/item.dart';
@@ -118,96 +119,106 @@ class _MyHomePageState extends State<MyHomePage> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     return Scaffold(
       appBar: AppBar(
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          systemNavigationBarColor: Colors.transparent,
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          // systemNavigationBarDividerColor: ElevationOverlay.applySurfaceTint(Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceTint, 3.0)
-        ),
-        // backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: Theme.of(context).appBarTheme.elevation,
-        primary: true,
-        // toolbarHeight: 0,
-        // scrolledUnderElevation: 0.0,
-        backgroundColor: AppBarTheme.of(context).backgroundColor,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(
-              [
-                Icons.account_balance_rounded,
-                Icons.query_stats,
-                Icons.account_balance_rounded
-              ].elementAt(_currentPageIndex),
-              size: 40,
-              color: Colors.amber[400],
-            ),
-            // TextButton(
-            //   onPressed: () async {
-            //     // inserts 13 months of data
-            //     // 5 items per day
-            //     int numberOfMonths = 13;
-            //     int numberOfItemsPerMonth = 5;
-            //     int numberOfItemsPerDay = 3;
-            //
-            //     Random r = Random();
-            //     DateTime currentDate = DateTime.now();
-            //     List<String> titles = [
-            //       "Milk",
-            //       "Chocolate",
-            //       "Water",
-            //       "Coffee",
-            //       "Electricity",
-            //       "Mouse",
-            //       "Needs",
-            //       "Burger"
-            //     ];
-            //     List<Future<void>> futures = [];
-            //     for (int month = 0; month < numberOfMonths; month++) {
-            //       currentDate = currentDate.subtract(Duration(days: 31));
-            //       for (int itemNumber = 0;
-            //           itemNumber < numberOfItemsPerMonth;
-            //           itemNumber++) {
-            //         Duration randomDays = Duration(days: 1 + r.nextInt(10));
-            //         for (int dayNumber = 0; dayNumber < numberOfItemsPerDay; dayNumber++) {
-            //           String randomTitle =
-            //           titles.elementAt(r.nextInt(titles.length - 1));
-            //           int sign = r.nextBool() ? 1 : -1;
-            //           double price = sign * r.nextDouble() * 100;
-            //           Item item = Item(
-            //             title: randomTitle,
-            //             price: price,
-            //             timestamp: currentDate.add(randomDays).millisecondsSinceEpoch,
-            //           );
-            //           futures.add(item.persist());
-            //         }
-            //       }
-            //     }
-            //     Future.wait(futures);
-            //     setState(() {
-            //       updateItems();
-            //     });
-            //   },
-            //   child: Text("Generate data"),
-            // ),
-            const VerticalDivider(),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Welcome!",
-                  style: TextStyle(
-                      fontSize: 14, color: Color.fromARGB(255, 117, 117, 117)),
-                ),
-                Text(
-                  ["Overview", "Statistics", "Page3"]
-                      .elementAt(_currentPageIndex),
-                )
-              ],
-            ),
-          ],
-        ),
-      ),
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            systemNavigationBarColor: Colors.transparent,
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            // systemNavigationBarDividerColor: ElevationOverlay.applySurfaceTint(Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceTint, 3.0)
+          ),
+          // backgroundColor: Theme.of(context).colorScheme.primary,
+          elevation: Theme.of(context).appBarTheme.elevation,
+          primary: true,
+          // toolbarHeight: 0,
+          // scrolledUnderElevation: 0.0,
+          backgroundColor: AppBarTheme.of(context).backgroundColor,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(
+                [
+                  Icons.account_balance_rounded,
+                  Icons.query_stats,
+                  Icons.account_balance_rounded
+                ].elementAt(_currentPageIndex),
+                size: 40,
+                color: Colors.amber[400],
+              ),
+              // TextButton(
+              //   onPressed: () async {
+              //     // inserts 13 months of data
+              //     // 5 items per day
+              //     int numberOfMonths = 13;
+              //     int numberOfItemsPerMonth = 5;
+              //     int numberOfItemsPerDay = 3;
+              //
+              //     Random r = Random();
+              //     DateTime currentDate = DateTime.now();
+              //     List<String> titles = [
+              //       "Milk",
+              //       "Chocolate",
+              //       "Water",
+              //       "Coffee",
+              //       "Electricity",
+              //       "Mouse",
+              //       "Needs",
+              //       "Burger"
+              //     ];
+              //     List<Future<void>> futures = [];
+              //     for (int month = 0; month < numberOfMonths; month++) {
+              //       currentDate = currentDate.subtract(Duration(days: 31));
+              //       for (int itemNumber = 0;
+              //           itemNumber < numberOfItemsPerMonth;
+              //           itemNumber++) {
+              //         Duration randomDays = Duration(days: 1 + r.nextInt(10));
+              //         for (int dayNumber = 0; dayNumber < numberOfItemsPerDay; dayNumber++) {
+              //           String randomTitle =
+              //           titles.elementAt(r.nextInt(titles.length - 1));
+              //           int sign = r.nextBool() ? 1 : -1;
+              //           double price = sign * r.nextDouble() * 100;
+              //           Item item = Item(
+              //             title: randomTitle,
+              //             price: price,
+              //             timestamp: currentDate.add(randomDays).millisecondsSinceEpoch,
+              //           );
+              //           futures.add(item.persist());
+              //         }
+              //       }
+              //     }
+              //     Future.wait(futures);
+              //     setState(() {
+              //       updateItems();
+              //     });
+              //   },
+              //   child: Text("Generate data"),
+              // ),
+              const VerticalDivider(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Welcome!",
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Color.fromARGB(255, 117, 117, 117)),
+                  ),
+                  Text(
+                    ["Overview", "Statistics", "Page3"]
+                        .elementAt(_currentPageIndex),
+                  )
+                ],
+              ),
+            ],
+          ),
+          bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(6.0),
+              child: Consumer<AppbarProgressIndicator>(
+                builder: (context, indicator, child) {
+                  if (indicator.isLoading) {
+                    return const LinearProgressIndicator();
+                  }
+                  return const SizedBox();
+                },
+              ))),
       body: [
         Main(scrollController: _scrollController),
         const AnalyticsPage(),
