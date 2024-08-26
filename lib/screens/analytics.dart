@@ -4,6 +4,8 @@ import 'package:walletapp/app_state/items_model.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:walletapp/services/utils.dart';
 
+import '../app_state/config.dart';
+
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({
     super.key,
@@ -29,9 +31,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         ),
       ),
     ];
-    return Consumer<ItemsModel>(
-      builder: (BuildContext context, ItemsModel itemsModel, Widget? child) {
+    return Consumer2<ItemsModel, Config>(
+      builder: (BuildContext context, ItemsModel itemsModel, Config config, Widget? child) {
         itemsByMonth = itemsModel.itemsByDate.flatten().groupedByMonth();
+        String currencyString = config.currencyToString(config.currency);
         return ListView.builder(
           scrollDirection: Axis.vertical,
           itemCount: itemsByMonth.length + topWidget.length,
@@ -66,7 +69,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                       children: [
                         Flexible(
                           child: Text(
-                            "${localItems.totalCredit().format()} DNT",
+                            "${localItems.totalCredit().format()} $currencyString",
                             style: const TextStyle(
                                 color: Color.fromARGB(255, 219, 68, 55),
                                 fontSize: 16),
@@ -74,7 +77,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         ),
                         Flexible(
                           child: Text(
-                            "${localItems.totalDebit().format()} DNT",
+                            "${localItems.totalDebit().format()} $currencyString",
                             style: const TextStyle(
                                 color: Color.fromARGB(255, 15, 157, 88),
                                 fontSize: 16),
@@ -120,7 +123,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           ],
                         ),
                         trailing: Text(
-                          "${total.format()} DNT",
+                          "${total.format()} ${currencyString}",
                           style: const TextStyle(fontSize: 16),
                         ),
                       );
