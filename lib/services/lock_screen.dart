@@ -15,12 +15,11 @@ Future<bool> skippedLoginScreen(int value) async {
 }
 
 Future<int> insertPin(String pin) async {
-  // await deletePin();
   final db = await DatabaseRepository.instance.database;
   return db.insert('users', {'pin': pin});
 }
 
 Future<void> deletePin() async {
   final db = await DatabaseRepository.instance.database;
-  await db.delete('users');
+  db.delete('users');
 }

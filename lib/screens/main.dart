@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:walletapp/models/datetime.dart';
 import 'package:walletapp/widgets/transactions_header.dart';
 
+import '../app_state/config.dart';
 import '../app_state/items_model.dart';
 import '../models/item.dart';
 import '../services/database.dart';
@@ -64,8 +65,9 @@ class MainState extends State<Main> {
       const CardInfo(),
       TransactionsHeader(firebase: firebase),
     ];
-    return Consumer<ItemsModel>(builder: (context, itemsModel, child) {
+    return Consumer2<ItemsModel, Config>(builder: (context, itemsModel, config, child) {
       debugPrint("REBUILDING MAIN WITH ${itemsModel.itemsByDate.length}");
+      String currencyString = config.currencyToString(config.currency);
       return ListView.separated(
           controller: widget.scrollController,
           separatorBuilder: (BuildContext context, int idx) {
@@ -78,7 +80,7 @@ class MainState extends State<Main> {
           itemBuilder: (BuildContext context, int idx) {
             if (idx < topWidgets.length) return topWidgets[idx];
             return itemBuilderByDate(
-                context, idx - topWidgets.length, itemsModel.itemsByDate);
+                context, idx - topWidgets.length, itemsModel.itemsByDate, currencyString);
           });
     });
   }
@@ -147,7 +149,7 @@ class MainState extends State<Main> {
   }
 
   Widget itemBuilderByDate(
-      BuildContext context, int idx, Map<DateTime, List<Item>> itemsByDate) {
+      BuildContext context, int idx, Map<DateTime, List<Item>> itemsByDate, String currencyString) {
     debugPrint("ItemBuilderBydate");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,7 +172,7 @@ class MainState extends State<Main> {
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, j) {
             return itemBuilderByDateSub(
-                context, j, itemsByDate.values.elementAt(idx));
+                context, j, itemsByDate.values.elementAt(idx), currencyString);
           },
         ),
       ],
@@ -181,7 +183,7 @@ class MainState extends State<Main> {
     return DatabaseRepository.instance.saveAllItems(items);
   }
 
-  Widget itemBuilderByDateSub(BuildContext context, int idx, List<Item> items) {
+  Widget itemBuilderByDateSub(BuildContext context, int idx, List<Item> items, String currencyString) {
     final currentItem = items.elementAt(idx);
     return ListTile(
       visualDensity:
@@ -194,7 +196,10 @@ class MainState extends State<Main> {
       leading: Icon(
         Icons.wallet,
         color: () {
-          if (currentItem.isCredit() && currentItem.paid == 1) {
+          if (currentItem.paid == 1) {
+            return context.read<Config>().iconColor;
+          }
+          if (currentItem.isCredit() && currentItem.paid != 1) {
             return Colors.black54;
           }
           return const Color.fromARGB(255, 66, 133, 244);
@@ -208,10 +213,16 @@ class MainState extends State<Main> {
             color: Colors.grey[600],
           )),
       trailing: Text(
-        '${currentItem.price.format()} DNT',
+        '${currentItem.price.format()} $currencyString',
         style: TextStyle(
           fontSize: 18,
           color: () {
+            if (currentItem.isCredit() && currentItem.paid == 1) {
+              return context.read<Config>().creditColor;
+            } else if (!currentItem.isCredit()) {
+              return context.read<Config>().debitColor;
+            }
+            return Colors.black54;
             const red = Color.fromARGB(255, 219, 68, 55);
             const green = Color.fromARGB(255, 15, 157, 88);
             const black = Colors.black54;
@@ -289,7 +300,7 @@ class MainState extends State<Main> {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop(null);
-              final itemToInsert = await openFullScreenDialog(defaultItem: a);
+              final itemToInsert = await openFullScreenDialog(itemsModel, defaultItem: a);
               if (itemToInsert != null) {
                 itemsModel.updateItem(itemToInsert);
               }
@@ -383,7 +394,7 @@ class MainState extends State<Main> {
     }).catchError((e) => debugPrint(e.toString()));
   }
 
-  Future<Item?> openFullScreenDialog({Item? defaultItem}) {
+  Future<Item?> openFullScreenDialog(ItemsModel itemsModel, {Item? defaultItem}) {
     titleController.text = '';
     priceController.text = '';
     notesController.text = '';
@@ -398,7 +409,7 @@ class MainState extends State<Main> {
           titleController: titleController,
           priceController: priceController,
           dateController: dateController,
-          items: context.read<ItemsModel>().items,
+          items: itemsModel.items,
           defaultItem: defaultItem,
         ),
       ),

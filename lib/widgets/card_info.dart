@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:walletapp/models/item.dart';
 
 import '../app_state/card_info.dart';
+import '../app_state/config.dart';
 import '../app_state/items_model.dart';
 import 'animated_count.dart';
 
@@ -34,11 +35,12 @@ class CardInfo extends StatelessWidget {
           margin: const EdgeInsets.all(8),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Consumer2<ItemsModel, CardInfoModel>(
-              builder: (context, itemsModel, cardInfoModel, child) {
+            child: Consumer3<ItemsModel, CardInfoModel, Config>(
+              builder: (context, itemsModel, cardInfoModel, config, child) {
                 final items = itemsModel.items;
                 final dailyAverageExpense = items.averageExpense();
                 final dailyAverageIncome = items.averageIncome();
+                final currencyString = config.currencyToString(config.currency);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -99,7 +101,7 @@ class CardInfo extends StatelessWidget {
                         const VerticalDivider(),
                         Text(
                           cardInfoModel.showCardInfo
-                              ? "${dailyAverageExpense.format()} DNT"
+                              ? "${dailyAverageExpense.format()} $currencyString"
                               : "---",
                           style: const TextStyle(
                             fontSize: 20,
@@ -124,7 +126,7 @@ class CardInfo extends StatelessWidget {
                         const VerticalDivider(),
                         Text(
                           cardInfoModel.showCardInfo
-                              ? "${dailyAverageIncome.format()} DNT"
+                              ? "${dailyAverageIncome.format()} $currencyString"
                               : "---",
                           style: const TextStyle(
                             fontSize: 20,

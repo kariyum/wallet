@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import 'package:walletapp/app_state/items_model.dart';
 import 'package:walletapp/models/datetime.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:walletapp/screens/analytics.dart';
+import 'package:walletapp/screens/settings.dart';
 import 'package:walletapp/services/database.dart';
 import 'package:walletapp/services/firebase.dart';
 import 'package:walletapp/widgets/item_input_dialog.dart';
@@ -94,9 +96,9 @@ class _MyHomePageState extends State<MyHomePage> {
     final res = items.isEmpty
         ? 0.0
         : items
-            .where((e) => e.paid == 1)
-            .map((e) => e.price)
-            .reduce((priceA, priceB) => priceA + priceB);
+        .where((e) => e.paid == 1)
+        .map((e) => e.price)
+        .reduce((priceA, priceB) => priceA + priceB);
     return double.parse((res).toStringAsFixed(3));
   }
 
@@ -126,11 +128,16 @@ class _MyHomePageState extends State<MyHomePage> {
             // systemNavigationBarDividerColor: ElevationOverlay.applySurfaceTint(Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceTint, 3.0)
           ),
           // backgroundColor: Theme.of(context).colorScheme.primary,
-          elevation: Theme.of(context).appBarTheme.elevation,
+          elevation: Theme
+              .of(context)
+              .appBarTheme
+              .elevation,
           primary: true,
           // toolbarHeight: 0,
           // scrolledUnderElevation: 0.0,
-          backgroundColor: AppBarTheme.of(context).backgroundColor,
+          backgroundColor: AppBarTheme
+              .of(context)
+              .backgroundColor,
           title: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -202,7 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         color: Color.fromARGB(255, 117, 117, 117)),
                   ),
                   Text(
-                    ["Overview", "Statistics", "Page3"]
+                    ["Overview", "Statistics", "Settings"]
                         .elementAt(_currentPageIndex),
                   )
                 ],
@@ -222,7 +229,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: [
         Main(scrollController: _scrollController),
         const AnalyticsPage(),
-        Text("Page 3"),
+        Settings(),
       ][_currentPageIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentPageIndex,
@@ -243,12 +250,10 @@ class _MyHomePageState extends State<MyHomePage> {
             //Badge( label: Text('2'), child: Icon(Icons.query_stats), ),
             label: 'Stats',
           ),
-          // NavigationDestination(
-          //   icon: Badge(
-          //     child: Icon(Icons.notifications_sharp),
-          //   ),
-          //   label: 'Notifications',
-          // ),
+          NavigationDestination(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
       floatingActionButton: ReactiveFloatingActionButton(
@@ -472,16 +477,17 @@ class _MyHomePageState extends State<MyHomePage> {
                                   );
                                 }
                                 final futureDocumentId =
-                                    firebase.uploadItems(items);
+                                firebase.uploadItems(items);
                                 futureDocumentId.then((documentId) {
                                   Clipboard.setData(
-                                          ClipboardData(text: documentId))
-                                      .then((_) => ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                                content: Text(
-                                                    'Document id copied to clipboard!')),
-                                          ));
+                                      ClipboardData(text: documentId))
+                                      .then((_) =>
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Document id copied to clipboard!')),
+                                      ));
                                 });
                               },
                               icon: const Icon(Icons.upload),
@@ -493,7 +499,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 if (futureValue != null) {
                                   // downloading
                                   final futureData =
-                                      firebase.downloadItems(futureValue);
+                                  firebase.downloadItems(futureValue);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -507,15 +513,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                       items = data;
                                       itemsByDate = data.groupedByDay();
                                     });
-                                    saveAllItems(data).then((_) => {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content:
-                                                  Text('Items saved locally!'),
-                                            ),
-                                          )
-                                        });
+                                    saveAllItems(data).then((_) =>
+                                    {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content:
+                                          Text('Items saved locally!'),
+                                        ),
+                                      )
+                                    });
                                   });
                                 }
                               },
@@ -530,7 +537,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ListView.separated(
                   // controller: _scrollController,
                   separatorBuilder: (BuildContext context, int index) =>
-                      const SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   // reverse: true,
@@ -565,12 +572,12 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget? itemBuilderByDateSub(
-      BuildContext context, int idx, List<Item> items) {
+  Widget? itemBuilderByDateSub(BuildContext context, int idx,
+      List<Item> items) {
     final currentItem = items.elementAt(idx);
     return ListTile(
       visualDensity:
-          const VisualDensity(vertical: VisualDensity.minimumDensity),
+      const VisualDensity(vertical: VisualDensity.minimumDensity),
       onLongPress: () async {
         isSelected = idx;
         await openDialogItem(items[idx]);
@@ -587,7 +594,8 @@ class _MyHomePageState extends State<MyHomePage> {
         size: 26,
       ),
       subtitle: Text(
-          "${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
+          "${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!
+              .toString().padLeft(2, '0')}",
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey[600],
@@ -739,7 +747,9 @@ class _MyHomePageState extends State<MyHomePage> {
           //  endIndent: 20,
           //  height: 0,
           // ),
-          itemCount: itemsByDate.values.elementAt(idx).length,
+          itemCount: itemsByDate.values
+              .elementAt(idx)
+              .length,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, j) {
@@ -786,8 +796,8 @@ class _MyHomePageState extends State<MyHomePage> {
           fontSize: 18,
           color: items[idx].paid == 1
               ? items[idx].isCredit()
-                  ? const Color.fromARGB(255, 219, 68, 55)
-                  : const Color.fromARGB(255, 15, 157, 88)
+              ? const Color.fromARGB(255, 219, 68, 55)
+              : const Color.fromARGB(255, 15, 157, 88)
               : Colors.black54,
         ),
       ),
@@ -874,17 +884,20 @@ class _MyHomePageState extends State<MyHomePage> {
     isChecked = false;
     return showGeneralDialog(
       context: context,
-      pageBuilder: (ctx, a, b) => Dialog.fullscreen(
-        child: ItemInputDialog(
-          formkey: _formKey,
-          notesController: notesController,
-          titleController: titleController,
-          priceController: priceController,
-          dateController: dateController,
-          items: context.read<ItemsModel>().items,
-          defaultItem: defaultItem,
-        ),
-      ),
+      pageBuilder: (ctx, a, b) =>
+          Dialog.fullscreen(
+            child: ItemInputDialog(
+              formkey: _formKey,
+              notesController: notesController,
+              titleController: titleController,
+              priceController: priceController,
+              dateController: dateController,
+              items: context
+                  .read<ItemsModel>()
+                  .items,
+              defaultItem: defaultItem,
+            ),
+          ),
     );
   }
 
@@ -897,147 +910,151 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       // barrierDismissible: false,
       barrierColor: Colors.black.withOpacity(0.1),
-      transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
-        filter:
+      transitionBuilder: (ctx, anim1, anim2, child) =>
+          BackdropFilter(
+            filter:
             ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
-        child: FadeTransition(
-          opacity: anim1,
-          child: child,
-        ),
-      ),
-      pageBuilder: (context, anim1, anim2) => AlertDialog(
-        // actionsAlignment: MainAxisAlignment.spaceBetween,
-        actionsPadding:
-            const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop(null);
-              if (a.isCredit()) {
-                await a.itemSwitchPaid().then((value) {
-                  updateItems();
-                });
-              }
-              return;
-            },
-            child: const Text(
-              "Paid",
-              style: TextStyle(
-                fontSize: 18.0,
-              ),
+            child: FadeTransition(
+              opacity: anim1,
+              child: child,
             ),
           ),
-          TextButton(
-            onPressed: () async {
-              await DatabaseRepository.instance
-                  .deleteItem(a.id!)
-                  .then((value) => ScaffoldMessenger.of(context).showSnackBar(
+      pageBuilder: (context, anim1, anim2) =>
+          AlertDialog(
+            // actionsAlignment: MainAxisAlignment.spaceBetween,
+            actionsPadding:
+            const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop(null);
+                  if (a.isCredit()) {
+                    await a.itemSwitchPaid().then((value) {
+                      updateItems();
+                    });
+                  }
+                  return;
+                },
+                child: const Text(
+                  "Paid",
+                  style: TextStyle(
+                    fontSize: 18.0,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await DatabaseRepository.instance
+                      .deleteItem(a.id!)
+                      .then((value) =>
+                      ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Transaction deleted !')),
                       ));
-              setState(() {
-                items = items.where((item) => item.id != a.id).toList();
-                itemsByDate = items.groupedByDay();
-                isSelected = -1;
-                Navigator.of(context).pop(null);
-              });
-            },
-            child: const Text("Delete",
-                style: TextStyle(
-                  fontSize: 18.0,
-                )),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop(null);
-              final itemToInsert = await openFullScreenDialog(defaultItem: a);
-              if (itemToInsert != null) {
-                await itemToInsert.persist();
-                setState(() {
-                  updateItems();
-                });
-              }
-              return;
-            },
-            child: const Text(
-              "Edit",
-              style: TextStyle(
-                fontSize: 18.0,
+                  setState(() {
+                    items = items.where((item) => item.id != a.id).toList();
+                    itemsByDate = items.groupedByDay();
+                    isSelected = -1;
+                    Navigator.of(context).pop(null);
+                  });
+                },
+                child: const Text("Delete",
+                    style: TextStyle(
+                      fontSize: 18.0,
+                    )),
               ),
-            ),
-          ),
-        ],
-        elevation: 10.0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.black,
-        // backgroundColor: Colors.amber,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Flexible(
-              child: Text(a.title),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(right: 8.0),
-            ),
-            Column(
-              children: [
-                Text(
-                  a.price.format(),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop(null);
+                  final itemToInsert = await openFullScreenDialog(
+                      defaultItem: a);
+                  if (itemToInsert != null) {
+                    await itemToInsert.persist();
+                    setState(() {
+                      updateItems();
+                    });
+                  }
+                  return;
+                },
+                child: const Text(
+                  "Edit",
                   style: TextStyle(
-                    fontSize: 21,
-                    color: a.isCredit()
-                        ? const Color.fromARGB(255, 219, 68, 55)
-                        : const Color.fromARGB(255, 15, 157, 88),
+                    fontSize: 18.0,
                   ),
+                ),
+              ),
+            ],
+            elevation: 10.0,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.black,
+            // backgroundColor: Colors.amber,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: Text(a.title),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(right: 8.0),
+                ),
+                Column(
+                  children: [
+                    Text(
+                      a.price.format(),
+                      style: TextStyle(
+                        fontSize: 21,
+                        color: a.isCredit()
+                            ? const Color.fromARGB(255, 219, 68, 55)
+                            : const Color.fromARGB(255, 15, 157, 88),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-        content: SizedBox(
-          width: 400,
-          // height: 100,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                a.formatDate(),
-                style: TextStyle(
-                  color: Colors.grey[600],
-                ),
-              ),
-              if (a.notes != null && a.notes! != "")
-                Flexible(
-                  fit: FlexFit.loose,
-                  child: Text(
-                    (a.notes != null) ? a.notes! : "",
-                    style: const TextStyle(
-                      fontSize: 18.0,
+            content: SizedBox(
+              width: 400,
+              // height: 100,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    a.formatDate(),
+                    style: TextStyle(
+                      color: Colors.grey[600],
                     ),
                   ),
-                )
-              else
-                const Text(
-                  "No description is available.",
-                  style: TextStyle(color: Colors.grey),
-                ),
-              // Align(
-              //   alignment: Alignment.bottomLeft,
-              //   child: Text(
-              //     a.note(),
-              //     style: TextStyle(
-              //       fontSize: 18.0,
-              //       color: Colors.grey[600],
-              //     ),
-              //   ),
-              // ),
-            ],
+                  if (a.notes != null && a.notes! != "")
+                    Flexible(
+                      fit: FlexFit.loose,
+                      child: Text(
+                        (a.notes != null) ? a.notes! : "",
+                        style: const TextStyle(
+                          fontSize: 18.0,
+                        ),
+                      ),
+                    )
+                  else
+                    const Text(
+                      "No description is available.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  // Align(
+                  //   alignment: Alignment.bottomLeft,
+                  //   child: Text(
+                  //     a.note(),
+                  //     style: TextStyle(
+                  //       fontSize: 18.0,
+                  //       color: Colors.grey[600],
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -1051,60 +1068,62 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       // barrierDismissible: false,
       barrierColor: Colors.black.withOpacity(0.1),
-      transitionBuilder: (ctx, anim1, anim2, child) => BackdropFilter(
-        filter:
+      transitionBuilder: (ctx, anim1, anim2, child) =>
+          BackdropFilter(
+            filter:
             ImageFilter.blur(sigmaX: 2 * anim1.value, sigmaY: 2 * anim1.value),
-        child: FadeTransition(
-          opacity: anim1,
-          child: child,
-        ),
-      ),
-      pageBuilder: (context, anim1, anim2) => AlertDialog(
-        // actionsAlignment: MainAxisAlignment.spaceBetween,
-        actionsPadding:
+            child: FadeTransition(
+              opacity: anim1,
+              child: child,
+            ),
+          ),
+      pageBuilder: (context, anim1, anim2) =>
+          AlertDialog(
+            // actionsAlignment: MainAxisAlignment.spaceBetween,
+            actionsPadding:
             const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 8.0),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(idController.text);
-            },
-            child: const Text(
-              "Download",
-              style: TextStyle(
-                fontSize: 16,
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(idController.text);
+                },
+                child: const Text(
+                  "Download",
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+            elevation: 10.0,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.black,
+            // backgroundColor: Colors.amber,
+            title: const Text("Sync"),
+            content: SizedBox(
+              width: 400,
+              // height: 100,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextField(
+                    controller: idController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      alignLabelWithHint: true,
+                      labelText: 'Document id',
+                      labelStyle: TextStyle(
+                        fontSize: 14,
+                      ),
+                    ),
+                    textInputAction: TextInputAction.newline,
+                  )
+                ],
               ),
             ),
           ),
-        ],
-        elevation: 10.0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.black,
-        // backgroundColor: Colors.amber,
-        title: const Text("Sync"),
-        content: SizedBox(
-          width: 400,
-          // height: 100,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextField(
-                controller: idController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                  labelText: 'Document id',
-                  labelStyle: TextStyle(
-                    fontSize: 14,
-                  ),
-                ),
-                textInputAction: TextInputAction.newline,
-              )
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

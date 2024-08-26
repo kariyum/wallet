@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:walletapp/models/item.dart';
+
+import '../app_state/config.dart';
 
 void main() {
   runApp(
@@ -74,10 +77,15 @@ class _AnimatedCountState extends AnimatedWidgetBaseState<AnimatedCount> {
 
   @override
   Widget build(BuildContext context) {
-    return Text("${_double.evaluate(animation).format()} DNT", style: const TextStyle(
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-    ),);
+    return Consumer<Config>(
+      builder: (context, config, child) {
+        final currencyString = config.currencyToString(config.currency);
+        return Text("${_double.evaluate(animation).format()} $currencyString", style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),);
+      }
+    );
   }
 
   @override
