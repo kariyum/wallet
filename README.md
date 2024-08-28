@@ -1,16 +1,16 @@
 # Wallet app
 
-A new Flutter project.
+# What is it?
+A mobile app that allows you to follow and extract insights on your transactions.
 
-<!-- ## Getting Started
+Features:
+- Accepts manual inputs of transactions, whether be it something you bought or sold
+- Displays all expenses by day or by month
+- Allows to configure reminder notifications
+- Syncs data to the cloud by choice
+- App lock screen
 
-This project is a starting point for a Flutter application.
+App is still under active development. Working on this on my free time. 
+Feel free to reach out if you would like to request a feature or collaborate.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference. -->
+![homepage](./readme-assets/homepage.png)
