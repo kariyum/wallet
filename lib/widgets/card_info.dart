@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:walletapp/app_state/theme_provider.dart';
 import 'package:walletapp/models/item.dart';
 
 import '../app_state/card_info.dart';
@@ -29,6 +30,7 @@ class CardInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.read<ThemeProvider>();
     return Stack(
       children: [
         Card(
@@ -91,11 +93,21 @@ class CardInfo extends StatelessWidget {
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: Colors.red[100],
+                          backgroundColor: () {
+                            if (themeProvider.isDarkMode()) {
+                              return Colors.red[700];
+                            }
+                            return Colors.red[100];
+                          }(),
                           maxRadius: 16,
                           child: Icon(
                             Icons.arrow_downward_rounded,
-                            color: Colors.red[600],
+                            color: () {
+                              if (themeProvider.isDarkMode()) {
+                                return Colors.red[100];
+                              }
+                              return Colors.red[600];
+                            }(),
                           ),
                         ),
                         const VerticalDivider(),
@@ -116,11 +128,21 @@ class CardInfo extends StatelessWidget {
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: Colors.green[100],
+                          backgroundColor: () {
+                            if (themeProvider.isDarkMode()) {
+                              return Colors.green[700];
+                            }
+                            return Colors.green[100];
+                          }(),
                           maxRadius: 16,
                           child: Icon(
                             Icons.arrow_upward_rounded,
-                            color: Colors.green[600],
+                            color: () {
+                              if (themeProvider.isDarkMode()) {
+                                return Colors.green[100];
+                              }
+                              return Colors.green[600];
+                            }(),
                           ),
                         ),
                         const VerticalDivider(),

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walletapp/services/lock_screen.dart';
 
@@ -12,9 +13,15 @@ enum Currency {
 class Config extends ChangeNotifier {
   bool _hasLockScreen = true;
   Currency _currency = Currency.tnd;
+  ThemeMode themeMode = ThemeMode.system;
+
   Color get creditColor => Color.fromARGB(255, 219, 68, 55);
   Color get debitColor => Color.fromARGB(255, 15, 157, 88);
   Color get iconColor => Color.fromARGB(255, 66, 133, 244);
+
+  void setThemeMode() {
+
+  }
 
   Future<SharedPreferences> sharedPreferencesInstance =
       SharedPreferences.getInstance();

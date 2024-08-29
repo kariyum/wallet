@@ -4,6 +4,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:walletapp/app_state/theme_provider.dart';
 import 'package:walletapp/widgets/notification_settings.dart';
 
 import '../app_state/config.dart';
@@ -31,6 +32,7 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeProvider themeProvider = context.read<ThemeProvider>();
     return Consumer<Config>(
       builder: (context, config, child) {
         return Column(
@@ -73,7 +75,53 @@ class _SettingsState extends State<Settings> {
                 },
               ),
             ),
+            ListTile(
+              title: Text("Theme"),
+              leading: themeProvider.isLightMode() ? Icon(Icons.light_mode) : Icon(Icons.dark_mode),
+              onTap: () async {
+                await onThemeTap(themeProvider);
+              },
+            ),
           ],
+        );
+      },
+    );
+  }
+
+  Future onThemeTap(ThemeProvider themeProvider) {
+    const List<String> supportedThemes = ["System", "Dark", "Light"];
+    return showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: 200,
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final theme in supportedThemes)
+                    ListTile(
+                      title: Center(
+                          child: Text(theme)),
+                      visualDensity: const VisualDensity(
+                          vertical: VisualDensity.minimumDensity),
+                      onTap: () {
+                        switch (theme) {
+                          case "System":
+                            themeProvider.setSystemTheme();
+                          case "Dark":
+                            themeProvider.setDarkTheme();
+                          case "Light":
+                            themeProvider.setLightTheme();
+                        }
+                        Navigator.of(context).pop();
+                      },
+                    )
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
@@ -109,6 +157,5 @@ class _SettingsState extends State<Settings> {
         );
       },
     );
-    ;
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:walletapp/app_state/items_model.dart';
+import 'package:walletapp/app_state/theme_provider.dart';
 import 'package:walletapp/models/item.dart';
 
 import 'custom_checkbox.dart';
@@ -49,6 +50,7 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
       priceController.text = item.price.abs().toString();
       notesController.text = item.notes != null ? item.notes! : "";
     }
+    final ThemeProvider themeProvider = context.read<ThemeProvider>();
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70.0,
@@ -62,7 +64,12 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
-          color: Color.fromRGBO(232, 240, 247, 0.5),
+          color: () {
+            if (themeProvider.isDarkMode()) {
+              return Color.fromRGBO(232, 240, 247, 0.1);
+            }
+            return Color.fromRGBO(232, 240, 247, 0.5);
+          }(),
           child: Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

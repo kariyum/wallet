@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:walletapp/app_state/appbar_progress_indicator.dart';
 import 'package:walletapp/app_state/items_model.dart';
+import 'package:walletapp/app_state/theme_provider.dart';
 import 'package:walletapp/models/datetime.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:walletapp/screens/analytics.dart';
@@ -119,6 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    final themeProvider = context.read<ThemeProvider>();
     return Scaffold(
       appBar: AppBar(
           systemOverlayStyle: const SystemUiOverlayStyle(
@@ -145,10 +147,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 [
                   Icons.account_balance_rounded,
                   Icons.query_stats,
-                  Icons.account_balance_rounded
+                  Icons.settings
                 ].elementAt(_currentPageIndex),
                 size: 40,
-                color: Colors.amber[400],
+                color: () {
+                  if (themeProvider.isDarkMode()) {
+                    return Colors.amber[800];
+                  }
+                  return Colors.amber[400];
+                }(),
               ),
               // TextButton(
               //   onPressed: () async {
