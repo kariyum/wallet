@@ -120,13 +120,13 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    final themeProvider = context.read<ThemeProvider>();
+    final ThemeProvider themeProvider = context.read<ThemeProvider>();
     return Scaffold(
       appBar: AppBar(
-          systemOverlayStyle: const SystemUiOverlayStyle(
+          systemOverlayStyle: SystemUiOverlayStyle(
             systemNavigationBarColor: Colors.transparent,
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
+            statusBarIconBrightness: themeProvider.isDarkMode() ? Brightness.light : Brightness.dark,
             // systemNavigationBarDividerColor: ElevationOverlay.applySurfaceTint(Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceTint, 3.0)
           ),
           // backgroundColor: Theme.of(context).colorScheme.primary,
