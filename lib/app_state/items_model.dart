@@ -133,8 +133,7 @@ class ItemsModel extends ChangeNotifier {
     });
     final int index = itemsArg.indexWhere((itemA) => itemA.id! == item.id!);
     if (index != -1) {
-      itemsArg.removeAt(index);
-      itemsArg.add(Item.fromJson(item.toMap()));
+      itemsArg[index] = Item.fromJson(item.toMap());
       _itemsByDate = itemsArg.groupedByDay();
       _itemsByMonth = _itemsByDate.flatten().groupedByMonth();
       notifyListeners();
