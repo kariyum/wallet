@@ -77,7 +77,9 @@ class _SettingsState extends State<Settings> {
             ),
             ListTile(
               title: Text("Theme"),
-              leading: themeProvider.isLightMode() ? Icon(Icons.light_mode) : Icon(Icons.dark_mode),
+              leading: themeProvider.isLightMode()
+                  ? Icon(Icons.light_mode)
+                  : Icon(Icons.dark_mode),
               onTap: () async {
                 await onThemeTap(themeProvider);
               },
@@ -93,32 +95,40 @@ class _SettingsState extends State<Settings> {
     return showModalBottomSheet(
       context: context,
       builder: (context) {
-        return SizedBox(
-          height: 200,
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (final theme in supportedThemes)
-                    ListTile(
-                      title: Center(
-                          child: Text(theme)),
-                      visualDensity: const VisualDensity(
-                          vertical: VisualDensity.minimumDensity),
-                      onTap: () {
-                        switch (theme) {
-                          case "System":
-                            themeProvider.setSystemTheme();
-                          case "Dark":
-                            themeProvider.setDarkTheme();
-                          case "Light":
-                            themeProvider.setLightTheme();
-                        }
-                        Navigator.of(context).pop();
-                      },
-                    )
-                ],
+        return SafeArea(
+          child: SizedBox(
+            height: 200,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (final theme in supportedThemes)
+                      ListTile(
+                        title: Center(
+                          child: Text(
+                            theme,
+                            style: const TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                        visualDensity: const VisualDensity(
+                            vertical: VisualDensity.minimumDensity),
+                        onTap: () {
+                          switch (theme) {
+                            case "System":
+                              themeProvider.setSystemTheme();
+                            case "Dark":
+                              themeProvider.setDarkTheme();
+                            case "Light":
+                              themeProvider.setLightTheme();
+                          }
+                          Navigator.of(context).pop();
+                        },
+                      )
+                  ],
+                ),
               ),
             ),
           ),
@@ -132,25 +142,33 @@ class _SettingsState extends State<Settings> {
     return showModalBottomSheet(
       context: context,
       builder: (context) {
-        return SizedBox(
-          height: 200,
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (final currency in supportedCurrencies)
-                    ListTile(
-                      title: Center(
-                          child: Text(config.currencyToString(currency))),
-                      visualDensity: const VisualDensity(
-                          vertical: VisualDensity.minimumDensity),
-                      onTap: () {
-                        config.setCurrency(currency);
-                        Navigator.of(context).pop();
-                      },
-                    )
-                ],
+        return SafeArea(
+          child: SizedBox(
+            height: 200,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (final currency in supportedCurrencies)
+                      ListTile(
+                        title: Center(
+                          child: Text(
+                            config.currencyToString(currency),
+                            style: const TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                        visualDensity: const VisualDensity(
+                            vertical: VisualDensity.minimumDensity),
+                        onTap: () {
+                          config.setCurrency(currency);
+                          Navigator.of(context).pop();
+                        },
+                      )
+                  ],
+                ),
               ),
             ),
           ),
