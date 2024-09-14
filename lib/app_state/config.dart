@@ -58,7 +58,7 @@ class Config extends ChangeNotifier {
   String currencyToString(Currency currency) {
     switch (currency) {
       case Currency.tnd:
-        return "DNT";
+        return "DT";
       case Currency.euro:
         return "€";
       case Currency.dollars:

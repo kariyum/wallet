@@ -311,15 +311,6 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                   textArea(notesController),
                   // TimePickerDialog(initialTime: TimeOfDay(hour: 1, minute: 1)),
 
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
-                    child: CustomCheckBox(
-                      defaultValue: widget.defaultItem?.paid,
-                      onChanged: (bool value) {
-                        isPaid = !value;
-                      },
-                    ),
-                  ),
                   // if (widget.defaultItem != null)
                     Row(
                       children: [
@@ -395,6 +386,15 @@ class _ItemInputDialogState extends State<ItemInputDialog> {
                         ),
                       ],
                     ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+                    child: CustomCheckBox(
+                      defaultValue: widget.defaultItem?.paid,
+                      onChanged: (bool value) {
+                        isPaid = !value;
+                      },
+                    ),
+                  ),
                 ],
               ),
             )
