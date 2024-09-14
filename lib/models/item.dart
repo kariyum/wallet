@@ -203,6 +203,11 @@ extension Transactions on List<Item> {
     return result;
   }
 
+  double monthlyAverageExpenses() {
+    final monthlyExpenses = groupedByMonth();
+    return monthlyExpenses.map((key, items) => MapEntry(key, items.totalCredit())).values.fold(0.0, (a, b) => a + b) / monthlyExpenses.length;
+  }
+
   Map<String, List<Item>> groupedByCategory() {
     Map<String, List<Item>> result = <String, List<Item>>{};
     for (final item in this) {
@@ -226,9 +231,7 @@ extension Transactions on List<Item> {
     return credits + debits;
   }
 
-  double dailyAverageExpense() {
-    return totalCredit() / length;
-  }
+
 }
 // class YearMonth{
 //   final int year;
@@ -262,10 +265,11 @@ extension Statistics on Map<DateTime, List<Item>> {
     return values.fold(<Item>[], (previousValue, element) => previousValue + element);
   }
 
-  double monthlyAverageExpense() {
-    final totalByMonth = map((DateTime key, List<Item> value) => MapEntry(key, value.totalCredit()));
-    final monthsCount = totalByMonth.length;
-    final total = totalByMonth.values.fold(0.0, (a, b) => a + b) / monthsCount;
+  double dailyAverageExpense() {
+    if (length == 0) return 0.0;
+    final totalByDay = map((DateTime key, List<Item> value) => MapEntry(key, value.totalCredit()));
+    final daysCount = totalByDay.length;
+    final total = totalByDay.values.fold(0.0, (a, b) => a + b) / daysCount;
     return total;
   }
 }

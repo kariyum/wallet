@@ -22,16 +22,19 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   @override
   Widget build(BuildContext context) {
     final topWidget = [
-      Card(
-        child: Consumer<ItemsModel>(
-          builder: (BuildContext context, ItemsModel itemsModel, Widget? child) {
-            return Column(
-              children: [
-                Metric(metric: "Daily", value: itemsModel.items.dailyAverageExpense()),
-                Metric(metric: "Monthly", value: itemsModel.itemsByDate.monthlyAverageExpense()),
-              ],
-            );
-          }
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Card(
+          child: Consumer<ItemsModel>(
+            builder: (BuildContext context, ItemsModel itemsModel, Widget? child) {
+              return Column(
+                children: [
+                  Metric(metric: "Daily", value: itemsModel.itemsByDate.dailyAverageExpense()),
+                  Metric(metric: "Monthly", value: itemsModel.items.monthlyAverageExpenses()),
+                ],
+              );
+            }
+          ),
         ),
       ),
       const Padding(
@@ -79,7 +82,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     dense: true,
                     visualDensity: VisualDensity.compact,
                     title: Text(
-                      "$fromDate - $endDate ${getMonth(date.$2)} $year",
+                      "${fromDate.toString().padLeft(2, "0")} - ${endDate.toString().padLeft(2, "0")} ${getMonth(date.$2)} $year",
                       style: const TextStyle(
                         fontSize: 18,
                       ),
