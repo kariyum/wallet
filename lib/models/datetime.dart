@@ -19,6 +19,7 @@ extension DatetimeFormatter on DateTime {
     if (itemsDate == "${today.year}-${today.month}-${today.day - 1}") return "Yesterday";
     final weekdayName = days.elementAt(weekday - 1);
     final monthName = months.elementAt(month - 1);
-    return "${day} ${monthName}";
+    final yearName = year == today.year ? '' : year;
+    return "${day} ${monthName} $yearName";
   }
 }

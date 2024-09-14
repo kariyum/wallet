@@ -89,74 +89,74 @@ class CardInfo extends StatelessWidget {
                           fontSize: 14,
                         ),
                       ),
-                    const Divider(),
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: () {
-                            if (themeProvider.isDarkMode()) {
-                              return Colors.red[700];
-                            }
-                            return Colors.red[100];
-                          }(),
-                          maxRadius: 16,
-                          child: Icon(
-                            Icons.arrow_downward_rounded,
-                            color: () {
-                              if (themeProvider.isDarkMode()) {
-                                return Colors.red[100];
-                              }
-                              return Colors.red[600];
-                            }(),
-                          ),
-                        ),
-                        const VerticalDivider(),
-                        Text(
-                          cardInfoModel.showCardInfo
-                              ? "${dailyAverageExpense.format()} $currencyString"
-                              : "---",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: () {
-                            if (themeProvider.isDarkMode()) {
-                              return Colors.green[700];
-                            }
-                            return Colors.green[100];
-                          }(),
-                          maxRadius: 16,
-                          child: Icon(
-                            Icons.arrow_upward_rounded,
-                            color: () {
-                              if (themeProvider.isDarkMode()) {
-                                return Colors.green[100];
-                              }
-                              return Colors.green[600];
-                            }(),
-                          ),
-                        ),
-                        const VerticalDivider(),
-                        Text(
-                          cardInfoModel.showCardInfo
-                              ? "${dailyAverageIncome.format()} $currencyString"
-                              : "---",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                    // const Divider(),
+                    // Row(
+                    //   children: [
+                    //     CircleAvatar(
+                    //       backgroundColor: () {
+                    //         if (themeProvider.isDarkMode()) {
+                    //           return Colors.red[700];
+                    //         }
+                    //         return Colors.red[100];
+                    //       }(),
+                    //       maxRadius: 16,
+                    //       child: Icon(
+                    //         Icons.arrow_downward_rounded,
+                    //         color: () {
+                    //           if (themeProvider.isDarkMode()) {
+                    //             return Colors.red[100];
+                    //           }
+                    //           return Colors.red[600];
+                    //         }(),
+                    //       ),
+                    //     ),
+                    //     const VerticalDivider(),
+                    //     Text(
+                    //       cardInfoModel.showCardInfo
+                    //           ? "${dailyAverageExpense.format()} $currencyString"
+                    //           : "---",
+                    //       style: const TextStyle(
+                    //         fontSize: 20,
+                    //         fontWeight: FontWeight.bold,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
+                    // const SizedBox(
+                    //   height: 10,
+                    // ),
+                    // Row(
+                    //   children: [
+                    //     CircleAvatar(
+                    //       backgroundColor: () {
+                    //         if (themeProvider.isDarkMode()) {
+                    //           return Colors.green[700];
+                    //         }
+                    //         return Colors.green[100];
+                    //       }(),
+                    //       maxRadius: 16,
+                    //       child: Icon(
+                    //         Icons.arrow_upward_rounded,
+                    //         color: () {
+                    //           if (themeProvider.isDarkMode()) {
+                    //             return Colors.green[100];
+                    //           }
+                    //           return Colors.green[600];
+                    //         }(),
+                    //       ),
+                    //     ),
+                    //     const VerticalDivider(),
+                    //     Text(
+                    //       cardInfoModel.showCardInfo
+                    //           ? "${dailyAverageIncome.format()} $currencyString"
+                    //           : "---",
+                    //       style: const TextStyle(
+                    //         fontSize: 20,
+                    //         fontWeight: FontWeight.bold,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 );
               },

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:walletapp/models/monthly_expense.dart';
 import 'package:walletapp/services/database.dart';
+import 'package:walletapp/services/utils.dart';
 
 class Item {
   final int? id;
@@ -177,8 +178,9 @@ extension Transactions on List<Item> {
       final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
       return DateTime(date.year, date.month, date.day);
     }
+    final sorted = this..sort((a, b) => b.timestamp - a.timestamp);
 
-    final Map<DateTime, List<Item>> mapResult = fold(
+    final Map<DateTime, List<Item>> mapResult = sorted.fold(
         {},
         (map, item) => map
           ..putIfAbsent(
@@ -223,6 +225,10 @@ extension Transactions on List<Item> {
     debits.sort((a, b) => b.total.compareTo(a.total));
     return credits + debits;
   }
+
+  double dailyAverageExpense() {
+    return totalCredit() / length;
+  }
 }
 // class YearMonth{
 //   final int year;
@@ -256,8 +262,10 @@ extension Statistics on Map<DateTime, List<Item>> {
     return values.fold(<Item>[], (previousValue, element) => previousValue + element);
   }
 
-  double dailyAverageExpense() {
-    var x = map((DateTime k, List<Item> value) => MapEntry(k, value.totalCredit()));
-    return 0.0;
+  double monthlyAverageExpense() {
+    final totalByMonth = map((DateTime key, List<Item> value) => MapEntry(key, value.totalCredit()));
+    final monthsCount = totalByMonth.length;
+    final total = totalByMonth.values.fold(0.0, (a, b) => a + b) / monthsCount;
+    return total;
   }
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:walletapp/app_state/items_model.dart';
 import 'package:walletapp/models/item.dart';
 import 'package:walletapp/services/utils.dart';
+import 'package:walletapp/widgets/metric.dart';
 
 import '../app_state/config.dart';
 
@@ -21,6 +22,18 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   @override
   Widget build(BuildContext context) {
     final topWidget = [
+      Card(
+        child: Consumer<ItemsModel>(
+          builder: (BuildContext context, ItemsModel itemsModel, Widget? child) {
+            return Column(
+              children: [
+                Metric(metric: "Daily", value: itemsModel.items.dailyAverageExpense()),
+                Metric(metric: "Monthly", value: itemsModel.itemsByDate.monthlyAverageExpense()),
+              ],
+            );
+          }
+        ),
+      ),
       const Padding(
         padding: EdgeInsets.only(left: 16.0, top: 16.0, bottom: 8),
         child: Text(
@@ -32,7 +45,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       ),
     ];
     return Consumer2<ItemsModel, Config>(
-      builder: (BuildContext context, ItemsModel itemsModel, Config config, Widget? child) {
+      builder: (BuildContext context, ItemsModel itemsModel, Config config,
+          Widget? child) {
         itemsByMonth = itemsModel.itemsByDate.flatten().groupedByMonth();
         String currencyString = config.currencyToString(config.currency);
         return ListView.builder(
@@ -51,15 +65,21 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 .map((date) => date.day);
             final fromDate = allDates.fold(31, (a, b) => a < b ? a : b);
             final endDate = allDates.fold(0, (a, b) => a < b ? b : a);
+            final currentYear =
+                DateTime.fromMillisecondsSinceEpoch(localItems.first.timestamp)
+                    .year;
+            final thisYear = DateTime.now().year;
+            final year = currentYear == thisYear ? '' : currentYear;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, left: 4.0, right: 4.0),
+              padding:
+                  const EdgeInsets.only(bottom: 16.0, left: 4.0, right: 4.0),
               child: Column(
                 children: [
                   ListTile(
                     dense: true,
                     visualDensity: VisualDensity.compact,
                     title: Text(
-                      "$fromDate - $endDate ${getMonth(date.$2)}",
+                      "$fromDate - $endDate ${getMonth(date.$2)} $year",
                       style: const TextStyle(
                         fontSize: 18,
                       ),
