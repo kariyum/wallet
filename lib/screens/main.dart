@@ -73,7 +73,7 @@ class MainState extends State<Main> {
           separatorBuilder: (BuildContext context, int idx) {
             if (idx < topWidgets.length) return const SizedBox();
             return const SizedBox(
-              height: 20,
+              height: 5,
             );
           },
           itemCount: topWidgets.length + itemsModel.itemsByDate.keys.length,
@@ -150,7 +150,6 @@ class MainState extends State<Main> {
 
   Widget itemBuilderByDate(
       BuildContext context, int idx, Map<DateTime, List<Item>> itemsByDate, String currencyString) {
-    debugPrint("ItemBuilderBydate");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -162,7 +161,7 @@ class MainState extends State<Main> {
           ),
         ),
         const Divider(
-          height: 4,
+          height: 0,
           indent: 14,
           endIndent: 10,
         ),
@@ -186,6 +185,7 @@ class MainState extends State<Main> {
   Widget itemBuilderByDateSub(BuildContext context, int idx, List<Item> items, String currencyString) {
     final currentItem = items.elementAt(idx);
     return ListTile(
+      dense: true,
       visualDensity:
           const VisualDensity(vertical: VisualDensity.minimumDensity),
       onLongPress: () async {
@@ -209,13 +209,12 @@ class MainState extends State<Main> {
       subtitle: Text(
           "${currentItem.hour!.toString().padLeft(2, '0')}:${currentItem.minute!.toString().padLeft(2, '0')}",
           style: TextStyle(
-            fontSize: 14,
             color: Colors.grey[600],
           )),
       trailing: Text(
         '${currentItem.price.format()} $currencyString',
         style: TextStyle(
-          fontSize: 18,
+          fontSize: 16,
           color: () {
             if (currentItem.isCredit() && currentItem.paid == 1) {
               return context.read<Config>().creditColor;
@@ -236,7 +235,7 @@ class MainState extends State<Main> {
       title: Text(
         currentItem.title,
         style: const TextStyle(
-          fontSize: 18,
+          fontSize: 16,
         ),
       ),
     );

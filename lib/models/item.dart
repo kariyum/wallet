@@ -1,8 +1,8 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:walletapp/models/monthly_expense.dart';
 import 'package:walletapp/services/database.dart';
-import 'package:walletapp/services/utils.dart';
 
 class Item {
   final int? id;
@@ -82,7 +82,20 @@ class Item {
     return price < 0;
   }
 
-  static const List<String> months = <String>[ 'Jan.', 'Feb.', 'March', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.' ];
+  static const List<String> months = <String>[
+    'Jan.',
+    'Feb.',
+    'March',
+    'Apr.',
+    'May',
+    'June',
+    'July',
+    'Aug.',
+    'Sept.',
+    'Oct.',
+    'Nov.',
+    'Dec.'
+  ];
   static const List<String> days = <String>[
     'Monday',
     'Tuesday',
@@ -92,6 +105,7 @@ class Item {
     'Saturday',
     'Sunday'
   ];
+
   String note() {
     String s = '';
     switch (day) {
@@ -116,7 +130,8 @@ class Item {
   }
 
   Future<void> itemSwitchPaid() async {
-    await DatabaseRepository.instance.itemSwitchPaid(id: id!, isPaid: (paid ?? 1) == 0 ? 1 : 0);
+    await DatabaseRepository.instance
+        .itemSwitchPaid(id: id!, isPaid: (paid ?? 1) == 0 ? 1 : 0);
   }
 
   String formatDate() {
@@ -136,9 +151,8 @@ extension Transactions on List<Item> {
   }
 
   double availableBalance() {
-    return
-      where((item) => item.paid == 1)
-      .fold(0, (acc, item) => acc + item.price);
+    return where((item) => item.paid == 1)
+        .fold(0, (acc, item) => acc + item.price);
   }
 
   double forecastedExpenses() {
@@ -162,15 +176,17 @@ extension Transactions on List<Item> {
   double averageExpense() {
     if (length == 0) return 0;
     return where((item) => item.isCredit())
-        .map((item) => item.price)
-        .fold(0.0, (a, b) => a + b) / length;
+            .map((item) => item.price)
+            .fold(0.0, (a, b) => a + b) /
+        length;
   }
 
   double averageIncome() {
     if (length == 0) return 0;
     return where((item) => !item.isCredit())
-        .map((item) => item.price)
-        .fold(0.0, (a, b) => a + b) / length;
+            .map((item) => item.price)
+            .fold(0.0, (a, b) => a + b) /
+        length;
   }
 
   Map<DateTime, List<Item>> groupedByDay() {
@@ -178,19 +194,16 @@ extension Transactions on List<Item> {
       final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
       return DateTime(date.year, date.month, date.day);
     }
+
     final sorted = this..sort((a, b) => b.timestamp - a.timestamp);
 
     final Map<DateTime, List<Item>> mapResult = sorted.fold(
         {},
-        (map, item) => map
-          ..putIfAbsent(
-              reset(item.timestamp),
-              () => <Item>[]
-          ).add(item));
+        (map, item) =>
+            map..putIfAbsent(reset(item.timestamp), () => <Item>[]).add(item));
 
-    return mapResult.map((date, items) => MapEntry(date,
-        items..sort((a, b) => b.timestamp - a.timestamp))
-    );
+    return mapResult.map((date, items) =>
+        MapEntry(date, items..sort((a, b) => b.timestamp - a.timestamp)));
   }
 
   Map<(int, int), List<Item>> groupedByMonth() {
@@ -204,8 +217,12 @@ extension Transactions on List<Item> {
   }
 
   double monthlyAverageExpenses() {
-    final monthlyExpenses = groupedByMonth();
-    return monthlyExpenses.map((key, items) => MapEntry(key, items.totalCredit())).values.fold(0.0, (a, b) => a + b) / monthlyExpenses.length;
+    final monthlyExpenses = removeOutliers().groupedByMonth();
+    return monthlyExpenses
+            .map((key, items) => MapEntry(key, items.totalCredit()))
+            .values
+            .fold(0.0, (a, b) => a + b) /
+        monthlyExpenses.length;
   }
 
   Map<String, List<Item>> groupedByCategory() {
@@ -218,21 +235,66 @@ extension Transactions on List<Item> {
 
   List<MonthlyExpense> groupedByCategoryAndSorted() {
     Map<String, List<Item>> itemsByCategory = groupedByCategory();
-    List<MonthlyExpense> categoriesList = itemsByCategory.map((key, value) {
-      final prices = value.map((e) => e.price);
-      final sum = prices.fold(0.0, (previousValue, element) => previousValue + element);
-      return MapEntry(key, MonthlyExpense(name: key, count: value.length, total: sum));
-    }).values.toList();
+    List<MonthlyExpense> categoriesList = itemsByCategory
+        .map((key, value) {
+          final prices = value.map((e) => e.price);
+          final sum = prices.fold(
+              0.0, (previousValue, element) => previousValue + element);
+          return MapEntry(
+              key, MonthlyExpense(name: key, count: value.length, total: sum));
+        })
+        .values
+        .toList();
 
-    List<MonthlyExpense> credits = categoriesList.where((element) => element.total < 0).toList();
-    List<MonthlyExpense> debits = categoriesList.where((element) => element.total >= 0).toList();
+    List<MonthlyExpense> credits =
+        categoriesList.where((element) => element.total < 0).toList();
+    List<MonthlyExpense> debits =
+        categoriesList.where((element) => element.total >= 0).toList();
     credits.sort((a, b) => a.total.compareTo(b.total));
     debits.sort((a, b) => b.total.compareTo(a.total));
     return credits + debits;
   }
 
+  double getMedian(List<double> l) {
+    l.sort();
+    final length = l.length;
+    if (length % 2 == 0) {
+      // even
+      return (l.elementAt(length % 2) + l.elementAt(length % 2 + 1)) / 2;
+    } else {
+      return l.elementAt(length % 2);
+    }
+  }
 
+  (double, double) getQuantiles() {
+    final items = where((item) => item.isCredit())
+        .map((item) => item.price.abs())
+        .toList();
+    items.sort();
+    final length = items.length;
+    final medianIndex = length ~/ 2;
+    final firstHalf = items.getRange(0, medianIndex).toList();
+    final secondHalf = items.getRange(medianIndex + 1, length).toList();
+    if (length % 2 == 1) {
+      // exclude median from both halves
+      firstHalf.removeLast();
+    }
+    final q3 = getMedian(secondHalf);
+    final q1 = getMedian(firstHalf);
+    return (q1, q3);
+  }
+
+  List<Item> removeOutliers() {
+    final (q1, q3) = getQuantiles();
+    final iqr = q3 - q1;
+    final lowerBound = q1 - 1.5 * iqr;
+    final upperBound = q3 + 1.5 * iqr;
+    return where((item) =>
+            item.price.abs() <= upperBound && lowerBound <= item.price.abs())
+        .toList();
+  }
 }
+
 // class YearMonth{
 //   final int year;
 //   final int month;
@@ -262,14 +324,19 @@ extension ExpenseFormatting on double {
 
 extension Statistics on Map<DateTime, List<Item>> {
   List<Item> flatten() {
-    return values.fold(<Item>[], (previousValue, element) => previousValue + element);
+    return values
+        .fold(<Item>[], (previousValue, element) => previousValue + element);
   }
 
   double dailyAverageExpense() {
     if (length == 0) return 0.0;
-    final totalByDay = map((DateTime key, List<Item> value) => MapEntry(key, value.totalCredit()));
-    final daysCount = totalByDay.length;
-    final total = totalByDay.values.fold(0.0, (a, b) => a + b) / daysCount;
-    return total;
+    final totalByDay = flatten().removeOutliers().groupedByDay().map(
+        (DateTime key, List<Item> value) => MapEntry(key, value.totalCredit()));
+    final total = totalByDay.values.fold(0.0, (acc, entry) => acc + entry);
+    final daysCount = totalByDay.entries
+        .map((entry) => (entry.key.year, entry.key.month))
+        .toSet()
+        .fold(0, (acc, entry) => acc + DateUtils.getDaysInMonth(entry.$1, entry.$2));
+    return total / daysCount;
   }
 }
