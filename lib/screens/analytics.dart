@@ -23,18 +23,27 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   Widget build(BuildContext context) {
     final topWidget = [
       Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Card(
-          child: Consumer<ItemsModel>(
-            builder: (BuildContext context, ItemsModel itemsModel, Widget? child) {
-              return Column(
-                children: [
-                  Metric(metric: "Daily", value: itemsModel.itemsByDate.dailyAverageExpense()),
-                  Metric(metric: "Monthly", value: itemsModel.items.monthlyAverageExpenses()),
-                ],
-              );
-            }
-          ),
+        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(left: 8.0),
+              child: Text("Average", style: TextStyle(fontSize: 21),),
+            ),
+            Card(
+              child: Consumer<ItemsModel>(
+                builder: (BuildContext context, ItemsModel itemsModel, Widget? child) {
+                  return Column(
+                    children: [
+                      Metric(metric: "Daily", value: itemsModel.itemsByDate.dailyAverageExpense()),
+                      Metric(metric: "Monthly", value: itemsModel.items.monthlyAverageExpenses()),
+                    ],
+                  );
+                }
+              ),
+            ),
+          ],
         ),
       ),
       const Padding(
