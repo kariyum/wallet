@@ -216,8 +216,9 @@ extension Transactions on List<Item> {
     return result;
   }
 
-  double monthlyAverageExpenses() {
-    final monthlyExpenses = removeOutliers().groupedByMonth();
+  double monthlyAverageExpenses(bool removeOutliers) {
+    if (length == 0) return 0.0;
+    final monthlyExpenses = removeOutliers ? this.removeOutliers().groupedByMonth() : groupedByMonth();
     return monthlyExpenses
             .map((key, items) => MapEntry(key, items.totalCredit()))
             .values
@@ -266,32 +267,43 @@ extension Transactions on List<Item> {
     }
   }
 
-  (double, double) getQuantiles() {
-    final items = where((item) => item.isCredit())
-        .map((item) => item.price.abs())
-        .toList();
-    items.sort();
-    final length = items.length;
-    final medianIndex = length ~/ 2;
-    final firstHalf = items.getRange(0, medianIndex).toList();
-    final secondHalf = items.getRange(medianIndex + 1, length).toList();
-    if (length % 2 == 1) {
-      // exclude median from both halves
-      firstHalf.removeLast();
+  (double, double)? getQuantiles() {
+    try {
+      final items = where((item) => item.isCredit())
+          .map((item) => item.price.abs())
+          .toList();
+      items.sort();
+      final length = items.length;
+      final medianIndex = length ~/ 2;
+      final firstHalf = items.getRange(0, medianIndex).toList();
+      final secondHalf = items.getRange(medianIndex + 1, length).toList();
+      if (length % 2 == 1) {
+        // exclude median from both halves
+        firstHalf.removeLast();
+      }
+      final q3 = getMedian(secondHalf);
+      final q1 = getMedian(firstHalf);
+      return (q1, q3);
+    } catch (exception) {
+      return null;
     }
-    final q3 = getMedian(secondHalf);
-    final q1 = getMedian(firstHalf);
-    return (q1, q3);
+
   }
 
   List<Item> removeOutliers() {
-    final (q1, q3) = getQuantiles();
-    final iqr = q3 - q1;
-    final lowerBound = q1 - 1.5 * iqr;
-    final upperBound = q3 + 1.5 * iqr;
-    return where((item) =>
-            item.price.abs() <= upperBound && lowerBound <= item.price.abs())
-        .toList();
+    final q = getQuantiles();
+    if (q != null) {
+      final (q1, q3) = q;
+      final iqr = q3 - q1;
+      final upperBound = q3 + 1.5 * iqr;
+      final result = where((item) =>
+      item.price.abs() <= upperBound)
+          .toList();
+      return result;
+    } else {
+      return this;
+    }
+
   }
 }
 
@@ -328,9 +340,10 @@ extension Statistics on Map<DateTime, List<Item>> {
         .fold(<Item>[], (previousValue, element) => previousValue + element);
   }
 
-  double dailyAverageExpense() {
+  double dailyAverageExpense(bool removeOutliers) {
     if (length == 0) return 0.0;
-    final totalByDay = flatten().removeOutliers().groupedByDay().map(
+    final groupedItems = removeOutliers ? flatten().removeOutliers().groupedByDay() : this;
+    final totalByDay = groupedItems.map(
         (DateTime key, List<Item> value) => MapEntry(key, value.totalCredit()));
     final total = totalByDay.values.fold(0.0, (acc, entry) => acc + entry);
     final daysCount = totalByDay.entries

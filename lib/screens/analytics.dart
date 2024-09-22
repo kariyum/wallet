@@ -18,6 +18,7 @@ class AnalyticsPage extends StatefulWidget {
 
 class _AnalyticsPageState extends State<AnalyticsPage> {
   Map<(int, int), List<Item>> itemsByMonth = {};
+  bool removeOutliers = false;
 
   @override
   Widget build(BuildContext context) {
@@ -31,16 +32,23 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               padding: EdgeInsets.only(left: 8.0),
               child: Text("Average", style: TextStyle(fontSize: 21),),
             ),
-            Card(
-              child: Consumer<ItemsModel>(
-                builder: (BuildContext context, ItemsModel itemsModel, Widget? child) {
-                  return Column(
-                    children: [
-                      Metric(metric: "Daily", value: itemsModel.itemsByDate.dailyAverageExpense()),
-                      Metric(metric: "Monthly", value: itemsModel.items.monthlyAverageExpenses()),
-                    ],
-                  );
-                }
+            TapRegion(
+              onTapInside: (event) {
+                setState(() {
+                  removeOutliers = !removeOutliers;
+                });
+              },
+              child: Card(
+                child: Consumer<ItemsModel>(
+                  builder: (BuildContext context, ItemsModel itemsModel, Widget? child) {
+                    return Column(
+                      children: [
+                        Metric(metric: "Daily", value: itemsModel.itemsByDate.dailyAverageExpense(removeOutliers)),
+                        Metric(metric: "Monthly", value: itemsModel.items.monthlyAverageExpenses(removeOutliers)),
+                      ],
+                    );
+                  }
+                ),
               ),
             ),
           ],
